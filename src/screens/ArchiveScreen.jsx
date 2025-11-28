@@ -12,7 +12,12 @@ export default function ArchiveScreen({ navigation }) {
   const renderGroupItem = ({ item }) => (
     <TouchableOpacity
       style={[styles.groupCard, { backgroundColor: colors.card, borderColor: colors.border }]}
-      onPress={() => navigation.navigate("GroupDetails", { groupId: item.id })}
+      onPress={() =>
+        navigation.navigate("GroupsTab", {
+          screen: "GroupDetails",
+          params: { groupId: item.id },
+        })
+      }
     >
       <View style={styles.groupHeader}>
         <Text style={[styles.groupName, { color: colors.text }]}>{item.name}</Text>
@@ -47,7 +52,7 @@ export default function ArchiveScreen({ navigation }) {
       <Text style={[styles.settledDate, { color: colors.textTertiary }]}>
         Settled on {new Date(item.settledAt).toLocaleDateString()}
       </Text>
-    </TouchableOpacity>
+    </TouchableOpacity >
   );
 
   return (

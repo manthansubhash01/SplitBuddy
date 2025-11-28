@@ -17,7 +17,7 @@ import { groupDetailsStyles as styles } from "../styles/groupDetailsStyles";
 
 export default function GroupDetailsScreen({ navigation, route }) {
   const { groupId } = route.params || {};
-  const { getGroup, addMember, updateMember, deleteMember } = useGroups();
+  const { getGroup, addMember, updateMember, deleteMember, deleteExpense } = useGroups();
   const [group, setGroup] = useState(null);
 
   const [addModalVisible, setAddModalVisible] = useState(false);
@@ -46,6 +46,27 @@ export default function GroupDetailsScreen({ navigation, route }) {
       setGroup(updatedGroup);
     }
   };
+
+  const handleDeleteExpense = (expense) => {
+    Alert.alert(
+      "Delete Expense",
+      `Are you sure you want to delete "${expense.title}"?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            deleteExpense(groupId, expense.id);
+            refreshGroup();
+            Alert.alert("Deleted", "Expense has been removed");
+          },
+        },
+      ]
+    );
+  };
+
+
 
   const handleAddMember = () => {
     if (!newMemberName.trim()) {
@@ -201,53 +222,6 @@ export default function GroupDetailsScreen({ navigation, route }) {
             })
           ) : (
             <Text style={styles.emptyText}>No members yet</Text>
-          )}
-        </View>
-      </View>
-
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Expenses</Text>
-          <TouchableOpacity
-            style={styles.addMemberButton}
-            onPress={() => navigation.navigate("AddExpense", { groupId })}
-          >
-            <Text style={styles.addMemberButtonText}>+ Add Expense</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.expensesList}>
-          {group.expenses && group.expenses.length > 0 ? (
-            group.expenses.map((expense) => {
-              const payerName =
-                group.members.find((m) => m.id === expense.payer)?.name ||
-                "Unknown";
-              return (
-                <TouchableOpacity
-                  key={expense.id}
-                  style={styles.expenseCard}
-                  onPress={() =>
-                    navigation.navigate("EditExpense", {
-                      groupId,
-                      expenseId: expense.id,
-                    })
-                  }
-                >
-                  <View style={styles.expenseHeader}>
-                    <Text style={styles.expenseTitle}>{expense.title}</Text>
-                    <Text style={styles.expenseAmount}>
-                      ${parseFloat(expense.amount).toFixed(2)}
-                    </Text>
-                  </View>
-                  <Text style={styles.expensePayer}>Paid by {payerName}</Text>
-                  <Text style={styles.expenseShared}>
-                    Split between {expense.sharedMembers?.length || 0} member(s)
-                  </Text>
-                </TouchableOpacity>
-              );
-            })
-          ) : (
-            <Text style={styles.emptyText}>No expenses yet</Text>
           )}
         </View>
       </View>

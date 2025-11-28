@@ -21,6 +21,7 @@ export const GroupProvider = ({ children }) => {
       members: group.members || [],
       expenses: [],
       totalExpenses: 0,
+      activityLog: [],
       isSettled: false,
       settledAt: null,
       createdAt: new Date().toISOString(),
@@ -54,10 +55,20 @@ export const GroupProvider = ({ children }) => {
             ...expense,
             createdAt: new Date().toISOString(),
           };
+
+          const activityEntry = {
+            id: Date.now().toString() + "_activity",
+            type: "expense_added",
+            description: `Added expense: ${expense.title} (₹${expense.amount})`,
+            timestamp: new Date().toISOString(),
+            expenseId: newExpense.id,
+          };
+
           return {
             ...group,
             expenses: [newExpense, ...group.expenses],
             totalExpenses: group.totalExpenses + parseFloat(expense.amount),
+            activityLog: [activityEntry, ...(group.activityLog || [])],
           };
         }
         return group;
@@ -75,18 +86,27 @@ export const GroupProvider = ({ children }) => {
             ? parseFloat(updates.amount)
             : oldAmount;
 
+          const activityEntry = {
+            id: Date.now().toString() + "_activity",
+            type: "expense_updated",
+            description: `Updated expense: ${updates.title || oldExpense.title} (₹${updates.amount || oldAmount})`,
+            timestamp: new Date().toISOString(),
+            expenseId: expenseId,
+          };
+
           return {
             ...group,
             expenses: group.expenses.map((expense) =>
               expense.id === expenseId
                 ? {
-                    ...expense,
-                    ...updates,
-                    updatedAt: new Date().toISOString(),
-                  }
+                  ...expense,
+                  ...updates,
+                  updatedAt: new Date().toISOString(),
+                }
                 : expense
             ),
             totalExpenses: group.totalExpenses - oldAmount + newAmount,
+            activityLog: [activityEntry, ...(group.activityLog || [])],
           };
         }
         return group;
@@ -99,19 +119,22 @@ export const GroupProvider = ({ children }) => {
     setGroups((prev) =>
       prev.map((group) => {
         if (group.id === groupId) {
-          const expenseToDelete = group.expenses.find(
-            (e) => e.id === expenseId
-          );
-          const amountToSubtract = expenseToDelete
-            ? parseFloat(expenseToDelete.amount)
-            : 0;
+          const expenseToDelete = group.expenses.find((e) => e.id === expenseId);
+          if (!expenseToDelete) return group;
+
+          const activityEntry = {
+            id: Date.now().toString() + "_activity",
+            type: "expense_deleted",
+            description: `Deleted expense: ${expenseToDelete.title} (₹${expenseToDelete.amount})`,
+            timestamp: new Date().toISOString(),
+            expenseId: expenseId,
+          };
 
           return {
             ...group,
-            expenses: group.expenses.filter(
-              (expense) => expense.id !== expenseId
-            ),
-            totalExpenses: group.totalExpenses - amountToSubtract,
+            expenses: group.expenses.filter((e) => e.id !== expenseId),
+            totalExpenses: group.totalExpenses - parseFloat(expenseToDelete.amount),
+            activityLog: [activityEntry, ...(group.activityLog || [])],
           };
         }
         return group;
@@ -211,6 +234,7 @@ export const GroupProvider = ({ children }) => {
     addExpenseToGroup,
     updateExpenseInGroup,
     deleteExpenseFromGroup,
+    deleteExpense: deleteExpenseFromGroup, // Alias for backward compatibility if needed
     getExpense,
     addMember,
     updateMember,
