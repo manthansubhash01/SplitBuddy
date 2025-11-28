@@ -3,7 +3,14 @@ import GroupsNavigator from "./GroupsNavigator";
 import HomeScreen from "../screens/HomeScreen";
 import ArchiveScreen from "../screens/ArchiveScreen";
 
-import { Ionicons } from "@expo/vector-icons";
+import {
+  HomeLineIcon,
+  HomeFilledIcon,
+  GroupLineIcon,
+  GroupFilledIcon,
+  ArchiveLineIcon,
+  ArchiveFilledIcon,
+} from "../components/icons/RemixIcons";
 
 const Tab = createBottomTabNavigator();
 
@@ -12,22 +19,42 @@ export default function AppNavigator() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarActiveTintColor: "#2c7bfe",
-        tabBarInactiveTintColor: "gray",
-        tabBarStyle: { height: 60 },
+        tabBarActiveTintColor: "#007AFF",
+        tabBarInactiveTintColor: "#8E8E93",
+        tabBarStyle: {
+          height: 65,
+          paddingBottom: 8,
+          paddingTop: 8,
+          backgroundColor: "#FFFFFF",
+          borderTopWidth: 1,
+          borderTopColor: "#E5E5EA",
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: "600",
+        },
         tabBarIcon: ({ color, focused }) => {
-          let icon = "";
+          const size = focused ? 28 : 24;
 
-          if (route.name === "HomeTab")
-            icon = focused ? "home" : "home-outline";
-
-          if (route.name === "GroupsTab")
-            icon = focused ? "people" : "people-outline";
-
-          if (route.name === "ArchiveTab")
-            icon = focused ? "archive" : "archive-outline";
-
-          return <Ionicons name={icon} size={22} color={color} />;
+          if (route.name === "HomeTab") {
+            return focused ? (
+              <HomeFilledIcon size={size} color={color} />
+            ) : (
+              <HomeLineIcon size={size} color={color} />
+            );
+          } else if (route.name === "GroupsTab") {
+            return focused ? (
+              <GroupFilledIcon size={size} color={color} />
+            ) : (
+              <GroupLineIcon size={size} color={color} />
+            );
+          } else if (route.name === "ArchiveTab") {
+            return focused ? (
+              <ArchiveFilledIcon size={size} color={color} />
+            ) : (
+              <ArchiveLineIcon size={size} color={color} />
+            );
+          }
         },
       })}
     >
