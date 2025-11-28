@@ -22,7 +22,7 @@ import {
   Camera,
   Trash,
   CheckCircle,
-  Circle,
+  CircleIcon as Circle,
 } from "phosphor-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 

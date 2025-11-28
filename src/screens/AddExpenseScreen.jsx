@@ -22,7 +22,7 @@ import {
   Camera,
   Trash,
   CheckCircle,
-  Circle,
+  CircleIcon as Circle,
   Receipt,
 } from "phosphor-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -38,6 +38,7 @@ export default function AddExpenseScreen({ navigation, route }) {
   const [payer, setPayer] = useState("");
   const [sharedMembers, setSharedMembers] = useState([]);
   const [receiptUri, setReceiptUri] = useState(null);
+  const [isPayment, setIsPayment] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
@@ -82,7 +83,10 @@ export default function AddExpenseScreen({ navigation, route }) {
       quality: 0.8,
     });
 
+    console.log("ImagePicker Result:", JSON.stringify(result, null, 2));
+
     if (!result.canceled && result.assets && result.assets.length > 0) {
+      console.log("Setting receipt URI:", result.assets[0].uri);
       setReceiptUri(result.assets[0].uri);
     }
   };
@@ -94,7 +98,7 @@ export default function AddExpenseScreen({ navigation, route }) {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!title.trim()) {
+    if (!isPayment && !title.trim()) {
       newErrors.title = "Title is required";
     }
 
@@ -126,12 +130,13 @@ export default function AddExpenseScreen({ navigation, route }) {
 
     try {
       const expenseData = {
-        title: title.trim(),
+        title: isPayment ? "Payment" : title.trim(),
         amount: parseFloat(amount),
         payer,
         sharedMembers,
         receiptUri,
         groupId,
+        isPayment,
       };
 
       const createdExpense = await createExpense(expenseData);
@@ -172,22 +177,62 @@ export default function AddExpenseScreen({ navigation, route }) {
         <Text style={styles.title}>Add Expense</Text>
         <Text style={styles.subtitle}>for {group.name}</Text>
 
-        <View style={styles.formSection}>
-          <Text style={styles.label}>What was it?</Text>
-          <CrumpledCard style={styles.inputCard}>
-            <TextInput
-              placeholder="e.g. Dinner, Hotel, Bribes"
-              style={styles.input}
-              value={title}
-              onChangeText={(text) => {
-                setTitle(text);
-                if (errors.title) setErrors((prev) => ({ ...prev, title: null }));
-              }}
-              placeholderTextColor={theme.colors.warmAsh}
-            />
-          </CrumpledCard>
-          {errors.title && <Text style={styles.errorText}>{errors.title}</Text>}
+        <View style={styles.typeToggleContainer}>
+          <Pressable
+            style={[
+              styles.typeToggle,
+              !isPayment && styles.typeToggleActive,
+            ]}
+            onPress={() => setIsPayment(false)}
+          >
+            <Text
+              style={[
+                styles.typeToggleText,
+                !isPayment && styles.typeToggleTextActive,
+              ]}
+            >
+              Expense
+            </Text>
+          </Pressable>
+          <Pressable
+            style={[
+              styles.typeToggle,
+              isPayment && styles.typeToggleActive,
+            ]}
+            onPress={() => {
+              setIsPayment(true);
+              setSharedMembers([]); // Reset shared members for single select
+            }}
+          >
+            <Text
+              style={[
+                styles.typeToggleText,
+                isPayment && styles.typeToggleTextActive,
+              ]}
+            >
+              Settle Up
+            </Text>
+          </Pressable>
         </View>
+
+        {!isPayment && (
+          <View style={styles.formSection}>
+            <Text style={styles.label}>What was it?</Text>
+            <CrumpledCard style={styles.inputCard}>
+              <TextInput
+                placeholder="e.g. Dinner, Hotel, Bribes"
+                style={styles.input}
+                value={title}
+                onChangeText={(text) => {
+                  setTitle(text);
+                  if (errors.title) setErrors((prev) => ({ ...prev, title: null }));
+                }}
+                placeholderTextColor={theme.colors.warmAsh}
+              />
+            </CrumpledCard>
+            {errors.title && <Text style={styles.errorText}>{errors.title}</Text>}
+          </View>
+        )}
 
         <View style={styles.formSection}>
           <Text style={styles.label}>How much?</Text>
@@ -251,14 +296,18 @@ export default function AddExpenseScreen({ navigation, route }) {
 
         <View style={styles.formSection}>
           <View style={styles.labelRow}>
-            <Text style={styles.label}>Split between</Text>
-            <Pressable onPress={selectAllMembers}>
-              <Text style={styles.actionLink}>
-                {sharedMembers.length === members.length
-                  ? "Deselect All"
-                  : "Select All"}
-              </Text>
-            </Pressable>
+            <Text style={styles.label}>
+              {isPayment ? "To whom?" : "Split between"}
+            </Text>
+            {!isPayment && (
+              <Pressable onPress={selectAllMembers}>
+                <Text style={styles.actionLink}>
+                  {sharedMembers.length === members.length
+                    ? "Deselect All"
+                    : "Select All"}
+                </Text>
+              </Pressable>
+            )}
           </View>
           <View style={styles.grid}>
             {members.map((member) => {
@@ -270,7 +319,16 @@ export default function AddExpenseScreen({ navigation, route }) {
                     styles.optionCard,
                     isSelected && styles.optionCardSelected,
                   ]}
-                  onPress={() => toggleMemberSelection(member.id)}
+                  onPress={() => {
+                    if (isPayment) {
+                      // Single select for payment
+                      setSharedMembers([member.id]);
+                      if (errors.sharedMembers)
+                        setErrors((prev) => ({ ...prev, sharedMembers: null }));
+                    } else {
+                      toggleMemberSelection(member.id);
+                    }
+                  }}
                 >
                   <Text
                     style={[
@@ -323,7 +381,7 @@ export default function AddExpenseScreen({ navigation, route }) {
 
         <View style={styles.actions}>
           <LucaButton
-            title={isLoading ? "Saving..." : "Save Expense"}
+            title={isLoading ? "Saving..." : isPayment ? "Record Payment" : "Save Expense"}
             onPress={handleSaveExpense}
             disabled={isLoading}
             style={styles.saveButton}
@@ -358,7 +416,33 @@ const styles = StyleSheet.create({
   subtitle: {
     ...theme.typography.body,
     color: theme.colors.warmAsh,
-    marginBottom: 32,
+    marginBottom: 24,
+  },
+  typeToggleContainer: {
+    flexDirection: "row",
+    backgroundColor: theme.colors.white,
+    borderRadius: theme.radii.button,
+    padding: 4,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.05)",
+  },
+  typeToggle: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: "center",
+    borderRadius: theme.radii.button - 4,
+  },
+  typeToggleActive: {
+    backgroundColor: theme.colors.burntInk,
+  },
+  typeToggleText: {
+    ...theme.typography.body,
+    fontFamily: "Syne_700Bold",
+    color: theme.colors.warmAsh,
+  },
+  typeToggleTextActive: {
+    color: theme.colors.white,
   },
   formSection: {
     marginBottom: 24,

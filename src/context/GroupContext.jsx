@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState } from "react";
+import { calculateBalances, calculateSettlements } from "../utils/settlementCalculations";
 
 const GroupContext = createContext();
 
@@ -54,10 +55,18 @@ export const GroupProvider = ({ children }) => {
             ...expense,
             createdAt: new Date().toISOString(),
           };
+
+          const updatedExpenses = [newExpense, ...group.expenses];
+          const balances = calculateBalances(updatedExpenses, group.members);
+          const settlements = calculateSettlements(balances, group.members);
+          const isSettled = settlements.length === 0 && updatedExpenses.length > 0;
+
           return {
             ...group,
-            expenses: [newExpense, ...group.expenses],
+            expenses: updatedExpenses,
             totalExpenses: group.totalExpenses + parseFloat(expense.amount),
+            isSettled: isSettled,
+            settledAt: isSettled ? new Date().toISOString() : null,
           };
         }
         return group;
@@ -75,18 +84,26 @@ export const GroupProvider = ({ children }) => {
             ? parseFloat(updates.amount)
             : oldAmount;
 
+          const updatedExpenses = group.expenses.map((expense) =>
+            expense.id === expenseId
+              ? {
+                ...expense,
+                ...updates,
+                updatedAt: new Date().toISOString(),
+              }
+              : expense
+          );
+
+          const balances = calculateBalances(updatedExpenses, group.members);
+          const settlements = calculateSettlements(balances, group.members);
+          const isSettled = settlements.length === 0 && updatedExpenses.length > 0;
+
           return {
             ...group,
-            expenses: group.expenses.map((expense) =>
-              expense.id === expenseId
-                ? {
-                    ...expense,
-                    ...updates,
-                    updatedAt: new Date().toISOString(),
-                  }
-                : expense
-            ),
+            expenses: updatedExpenses,
             totalExpenses: group.totalExpenses - oldAmount + newAmount,
+            isSettled: isSettled,
+            settledAt: isSettled ? new Date().toISOString() : null,
           };
         }
         return group;
@@ -106,12 +123,20 @@ export const GroupProvider = ({ children }) => {
             ? parseFloat(expenseToDelete.amount)
             : 0;
 
+          const updatedExpenses = group.expenses.filter(
+            (expense) => expense.id !== expenseId
+          );
+
+          const balances = calculateBalances(updatedExpenses, group.members);
+          const settlements = calculateSettlements(balances, group.members);
+          const isSettled = settlements.length === 0 && updatedExpenses.length > 0;
+
           return {
             ...group,
-            expenses: group.expenses.filter(
-              (expense) => expense.id !== expenseId
-            ),
+            expenses: updatedExpenses,
             totalExpenses: group.totalExpenses - amountToSubtract,
+            isSettled: isSettled,
+            settledAt: isSettled ? new Date().toISOString() : null,
           };
         }
         return group;

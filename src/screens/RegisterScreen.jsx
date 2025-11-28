@@ -16,26 +16,22 @@ import { CrumpledCard } from "../components/ui/CrumpledCard";
 import { Eye, EyeSlash } from "phosphor-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-export default function LoginScreen({ navigation }) {
+export default function RegisterScreen({ navigation }) {
+    const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const insets = useSafeAreaInsets();
 
-    const handleLogin = async () => {
+    const handleRegister = async () => {
         setIsLoading(true);
-        // Simulate login API call
+        // Simulate register API call
         setTimeout(() => {
             setIsLoading(false);
             // Navigate to main app
             navigation.replace("Main");
         }, 1000);
-    };
-
-    const handleContinueWithoutLogin = () => {
-        // Navigate directly to main app
-        navigation.replace("Main");
     };
 
     return (
@@ -51,20 +47,34 @@ export default function LoginScreen({ navigation }) {
                     showsVerticalScrollIndicator={false}
                 >
                     <View style={styles.brandingContainer}>
-                        <Text style={styles.logoEmoji}>🍝</Text>
-                        <Text style={styles.appName}>SplitBuddy</Text>
+                        <Text style={styles.logoEmoji}>🥂</Text>
+                        <Text style={styles.appName}>Join the Family</Text>
                         <Text style={styles.tagline}>
-                            Italian chaos,{"\n"}perfectly split.
+                            More friends,{"\n"}more chaos.
                         </Text>
                     </View>
 
                     <View style={styles.formContainer}>
                         <View style={styles.inputGroup}>
+                            <Text style={styles.label}>Name</Text>
+                            <CrumpledCard style={styles.inputCard}>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Luigi"
+                                    placeholderTextColor={theme.colors.warmAsh}
+                                    value={name}
+                                    onChangeText={setName}
+                                    autoCorrect={false}
+                                />
+                            </CrumpledCard>
+                        </View>
+
+                        <View style={styles.inputGroup}>
                             <Text style={styles.label}>Email</Text>
                             <CrumpledCard style={styles.inputCard}>
                                 <TextInput
                                     style={styles.input}
-                                    placeholder="mario@example.com"
+                                    placeholder="luigi@example.com"
                                     placeholderTextColor={theme.colors.warmAsh}
                                     value={email}
                                     onChangeText={setEmail}
@@ -103,30 +113,20 @@ export default function LoginScreen({ navigation }) {
                             </CrumpledCard>
                         </View>
 
-                        <Pressable style={styles.forgotPassword}>
-                            <Text style={styles.forgotPasswordText}>Lost your key?</Text>
-                        </Pressable>
-
                         <View style={styles.actions}>
                             <LucaButton
-                                title={isLoading ? "Entering..." : "Enter the Chaos"}
-                                onPress={handleLogin}
+                                title={isLoading ? "Joining..." : "Start the Party"}
+                                onPress={handleRegister}
                                 disabled={isLoading}
-                                style={styles.loginButton}
-                            />
-                            <LucaButton
-                                title="Just Looking"
-                                variant="secondary"
-                                onPress={handleContinueWithoutLogin}
-                                disabled={isLoading}
+                                style={styles.registerButton}
                             />
                         </View>
                     </View>
 
                     <View style={styles.bottomLinks}>
-                        <Text style={styles.bottomText}>New to the family? </Text>
-                        <Pressable onPress={() => navigation.navigate("Register")}>
-                            <Text style={styles.linkText}>Join us</Text>
+                        <Text style={styles.bottomText}>Already have a key? </Text>
+                        <Pressable onPress={() => navigation.navigate("Login")}>
+                            <Text style={styles.linkText}>Enter here</Text>
                         </Pressable>
                     </View>
                 </ScrollView>
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
     },
     appName: {
         ...theme.typography.display,
-        fontSize: 42,
+        fontSize: 36,
         color: theme.colors.burntInk,
         marginBottom: 8,
         textAlign: "center",
@@ -207,19 +207,11 @@ const styles = StyleSheet.create({
     eyeButton: {
         padding: 16,
     },
-    forgotPassword: {
-        alignSelf: "flex-end",
-        marginBottom: 24,
-    },
-    forgotPasswordText: {
-        ...theme.typography.caption,
-        color: theme.colors.aperitivoSpritz,
-        fontFamily: "Syne_700Bold",
-    },
     actions: {
         gap: 16,
+        marginTop: 16,
     },
-    loginButton: {
+    registerButton: {
         marginBottom: 8,
     },
     bottomLinks: {

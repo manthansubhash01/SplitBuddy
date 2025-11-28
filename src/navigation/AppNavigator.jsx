@@ -6,7 +6,7 @@ import { theme } from "../styles/theme";
 import {
   House,
   UsersThree,
-  ArchiveBox,
+  Archive,
 } from "phosphor-react-native";
 
 const Tab = createBottomTabNavigator();
@@ -41,7 +41,7 @@ export default function AppNavigator() {
           } else if (route.name === "GroupsTab") {
             return <UsersThree size={size} color={color} weight={weight} />;
           } else if (route.name === "ArchiveTab") {
-            return <ArchiveBox size={size} color={color} weight={weight} />;
+            return <Archive size={size} color={color} weight={weight} />;
           }
         },
       })}
