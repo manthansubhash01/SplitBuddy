@@ -2,60 +2,46 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import GroupsNavigator from "./GroupsNavigator";
 import HomeScreen from "../screens/HomeScreen";
 import ArchiveScreen from "../screens/ArchiveScreen";
-import { useTheme } from "../context/ThemeContext";
-
+import { theme } from "../styles/theme";
 import {
-  HomeLineIcon,
-  HomeFilledIcon,
-  GroupLineIcon,
-  GroupFilledIcon,
-  ArchiveLineIcon,
-  ArchiveFilledIcon,
-} from "../components/icons/RemixIcons";
+  House,
+  UsersThree,
+  ArchiveBox,
+} from "phosphor-react-native";
 
 const Tab = createBottomTabNavigator();
 
 export default function AppNavigator() {
-  const { colors, isDark } = useTheme();
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textTertiary,
+        tabBarActiveTintColor: theme.colors.aperitivoSpritz,
+        tabBarInactiveTintColor: theme.colors.warmAsh,
         tabBarStyle: {
-          height: 65,
-          paddingBottom: 8,
-          paddingTop: 8,
-          backgroundColor: colors.surface,
+          height: 80, // Taller tab bar
+          paddingBottom: 20,
+          paddingTop: 10,
+          backgroundColor: theme.colors.oldReceipt,
           borderTopWidth: 1,
-          borderTopColor: colors.border,
+          borderTopColor: "rgba(0,0,0,0.05)",
+          elevation: 0,
+          shadowOpacity: 0,
         },
         tabBarLabelStyle: {
+          fontFamily: "Syne_500Medium",
           fontSize: 12,
-          fontWeight: "600",
         },
         tabBarIcon: ({ color, focused }) => {
-          const size = focused ? 28 : 24;
+          const size = 28;
+          const weight = focused ? "fill" : "regular";
 
           if (route.name === "HomeTab") {
-            return focused ? (
-              <HomeFilledIcon size={size} color={color} />
-            ) : (
-              <HomeLineIcon size={size} color={color} />
-            );
+            return <House size={size} color={color} weight={weight} />;
           } else if (route.name === "GroupsTab") {
-            return focused ? (
-              <GroupFilledIcon size={size} color={color} />
-            ) : (
-              <GroupLineIcon size={size} color={color} />
-            );
+            return <UsersThree size={size} color={color} weight={weight} />;
           } else if (route.name === "ArchiveTab") {
-            return focused ? (
-              <ArchiveFilledIcon size={size} color={color} />
-            ) : (
-              <ArchiveLineIcon size={size} color={color} />
-            );
+            return <ArchiveBox size={size} color={color} weight={weight} />;
           }
         },
       })}
@@ -68,7 +54,7 @@ export default function AppNavigator() {
       <Tab.Screen
         name="GroupsTab"
         component={GroupsNavigator}
-        options={{ title: "Groups" }}
+        options={{ title: "Trips" }}
       />
       <Tab.Screen
         name="ArchiveTab"

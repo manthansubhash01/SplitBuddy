@@ -1,71 +1,86 @@
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, FlatList, Pressable } from "react-native";
 import { useGroups } from "../context/GroupContext";
-import { useTheme } from "../context/ThemeContext";
+import { theme } from "../styles/theme";
+import { CrumpledCard } from "../components/ui/CrumpledCard";
+import { CheckCircle, Users, Receipt, CurrencyDollar } from "phosphor-react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function ArchiveScreen({ navigation }) {
-  const { colors } = useTheme();
   const { groups } = useGroups();
+  const insets = useSafeAreaInsets();
 
   // Filter settled/archived groups
   const settledGroups = groups.filter((group) => group.isSettled);
 
   const renderGroupItem = ({ item }) => (
-    <TouchableOpacity
-      style={[styles.groupCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+    <Pressable
       onPress={() => navigation.navigate("GroupDetails", { groupId: item.id })}
     >
-      <View style={styles.groupHeader}>
-        <Text style={[styles.groupName, { color: colors.text }]}>{item.name}</Text>
-        <View style={[styles.settledBadge, { backgroundColor: colors.success }]}>
-          <Text style={styles.settledText}>✓ Settled</Text>
+      <CrumpledCard style={styles.groupCard}>
+        <View style={styles.groupHeader}>
+          <Text style={styles.groupName}>{item.name}</Text>
+          <View style={styles.settledBadge}>
+            <CheckCircle size={14} color={theme.colors.white} weight="fill" />
+            <Text style={styles.settledText}>Settled</Text>
+          </View>
         </View>
-      </View>
 
-      {item.description && (
-        <Text style={[styles.groupDescription, { color: colors.textSecondary }]}>
-          {item.description}
-        </Text>
-      )}
-
-      <View style={styles.groupStats}>
-        <View style={styles.statItem}>
-          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Members</Text>
-          <Text style={[styles.statValue, { color: colors.text }]}>{item.members.length}</Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Expenses</Text>
-          <Text style={[styles.statValue, { color: colors.text }]}>{item.expenses.length}</Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Total</Text>
-          <Text style={[styles.statValue, { color: colors.text }]}>
-            ₹{item.totalExpenses.toFixed(2)}
+        {item.description && (
+          <Text style={styles.groupDescription} numberOfLines={1}>
+            {item.description}
           </Text>
-        </View>
-      </View>
+        )}
 
-      <Text style={[styles.settledDate, { color: colors.textTertiary }]}>
-        Settled on {new Date(item.settledAt).toLocaleDateString()}
-      </Text>
-    </TouchableOpacity>
+        <View style={styles.divider} />
+
+        <View style={styles.groupStats}>
+          <View style={styles.statItem}>
+            <Users size={20} color={theme.colors.warmAsh} />
+            <Text style={styles.statValue}>{item.members.length}</Text>
+            <Text style={styles.statLabel}>Members</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Receipt size={20} color={theme.colors.warmAsh} />
+            <Text style={styles.statValue}>{item.expenses.length}</Text>
+            <Text style={styles.statLabel}>Expenses</Text>
+          </View>
+          <View style={styles.statItem}>
+            <CurrencyDollar size={20} color={theme.colors.warmAsh} />
+            <Text style={[styles.statValue, { color: theme.colors.aperitivoSpritz }]}>
+              ${item.totalExpenses.toFixed(0)}
+            </Text>
+            <Text style={styles.statLabel}>Total</Text>
+          </View>
+        </View>
+
+        <Text style={styles.settledDate}>
+          Settled on {new Date(item.settledAt).toLocaleDateString()}
+        </Text>
+      </CrumpledCard>
+    </Pressable>
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+      <View style={styles.header}>
+        <Text style={styles.title}>The Archives</Text>
+        <Text style={styles.subtitle}>Memories of paid debts</Text>
+      </View>
+
       {settledGroups.length > 0 ? (
         <FlatList
           data={settledGroups}
           renderItem={renderGroupItem}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
         />
       ) : (
         <View style={styles.emptyState}>
-          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-            No settled trips yet
-          </Text>
-          <Text style={[styles.emptySubtext, { color: colors.textTertiary }]}>
-            Settled trips will appear here
+          <Text style={styles.emptyIcon}>🕸️</Text>
+          <Text style={styles.emptyText}>No settled trips yet</Text>
+          <Text style={styles.emptySubtext}>
+            Once you settle up, trips will appear here.
           </Text>
         </View>
       )}
@@ -76,61 +91,91 @@ export default function ArchiveScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: theme.colors.oldReceipt,
+  },
+  header: {
+    paddingHorizontal: theme.spacing.homePadding,
+    paddingTop: 12,
+    paddingBottom: 12,
+  },
+  title: {
+    ...theme.typography.display,
+    color: theme.colors.burntInk,
+  },
+  subtitle: {
+    ...theme.typography.body,
+    color: theme.colors.warmAsh,
   },
   listContent: {
-    padding: 20,
+    padding: theme.spacing.homePadding,
+    paddingBottom: 100,
   },
   groupCard: {
-    padding: 16,
-    borderRadius: 14,
     marginBottom: 16,
-    borderWidth: 2,
+    backgroundColor: theme.colors.white,
   },
   groupHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
     marginBottom: 8,
   },
   groupName: {
-    fontSize: 20,
-    fontWeight: "700",
+    ...theme.typography.title2,
+    color: theme.colors.burntInk,
     flex: 1,
+    marginRight: 12,
   },
   settledBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: theme.colors.electricAmaro,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     borderRadius: 12,
+    gap: 4,
+    transform: [{ rotate: "2deg" }],
   },
   settledText: {
-    color: "#FFFFFF",
-    fontSize: 12,
-    fontWeight: "700",
+    ...theme.typography.micro,
+    color: theme.colors.burntInk,
+    textTransform: "uppercase",
   },
   groupDescription: {
-    fontSize: 14,
-    marginBottom: 12,
+    ...theme.typography.body,
+    color: theme.colors.warmAsh,
+    marginBottom: 16,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: theme.colors.oldReceipt,
+    marginBottom: 16,
   },
   groupStats: {
     flexDirection: "row",
-    justifyContent: "space-around",
-    paddingVertical: 12,
-    marginBottom: 8,
+    justifyContent: "space-between",
+    marginBottom: 16,
   },
   statItem: {
     alignItems: "center",
-  },
-  statLabel: {
-    fontSize: 12,
-    marginBottom: 4,
+    flex: 1,
   },
   statValue: {
-    fontSize: 16,
-    fontWeight: "700",
+    ...theme.typography.title2,
+    fontSize: 18,
+    color: theme.colors.burntInk,
+    marginTop: 4,
+  },
+  statLabel: {
+    ...theme.typography.caption,
+    fontSize: 12,
+    color: theme.colors.warmAsh,
   },
   settledDate: {
-    fontSize: 12,
+    ...theme.typography.caption,
+    color: theme.colors.warmAsh,
     textAlign: "center",
+    fontStyle: "italic",
   },
   emptyState: {
     flex: 1,
@@ -138,12 +183,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 40,
   },
+  emptyIcon: {
+    fontSize: 64,
+    marginBottom: 20,
+    opacity: 0.5,
+  },
   emptyText: {
-    fontSize: 18,
-    fontWeight: "600",
+    ...theme.typography.title2,
+    color: theme.colors.burntInk,
     marginBottom: 8,
   },
   emptySubtext: {
-    fontSize: 14,
+    ...theme.typography.body,
+    color: theme.colors.warmAsh,
+    textAlign: "center",
   },
 });

@@ -3,22 +3,25 @@ import {
     Text,
     StyleSheet,
     TextInput,
-    TouchableOpacity,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
     StatusBar,
+    Pressable,
 } from "react-native";
 import { useState } from "react";
-import { useTheme } from "../context/ThemeContext";
-import ThemeToggleButton from "../components/ThemeToggleButton";
+import { theme } from "../styles/theme";
+import { LucaButton } from "../components/ui/LucaButton";
+import { CrumpledCard } from "../components/ui/CrumpledCard";
+import { Eye, EyeSlash } from "phosphor-react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function LoginScreen({ navigation }) {
-    const { colors, isDark } = useTheme();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const insets = useSafeAreaInsets();
 
     const handleLogin = async () => {
         setIsLoading(true);
@@ -36,15 +39,8 @@ export default function LoginScreen({ navigation }) {
     };
 
     return (
-        <View style={[styles.container, { backgroundColor: colors.background }]}>
-            <StatusBar
-                barStyle={isDark ? "light-content" : "dark-content"}
-                backgroundColor={colors.background}
-            />
-
-            {/* Theme Toggle Button */}
-            <ThemeToggleButton style={styles.themeToggle} />
-
+        <View style={[styles.container, { paddingTop: insets.top }]}>
+            <StatusBar style="dark" />
             <KeyboardAvoidingView
                 style={styles.keyboardView}
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -54,122 +50,85 @@ export default function LoginScreen({ navigation }) {
                     keyboardShouldPersistTaps="handled"
                     showsVerticalScrollIndicator={false}
                 >
-                    {/* Logo/Branding Section */}
                     <View style={styles.brandingContainer}>
-                        <View style={[styles.logoCircle, { backgroundColor: colors.primary }]}>
-                            <Text style={styles.logoEmoji}>💰</Text>
-                        </View>
-                        <Text style={[styles.appName, { color: colors.text }]}>SplitBuddy</Text>
-                        <Text style={[styles.tagline, { color: colors.textSecondary }]}>
-                            Fair splits. Zero drama.
+                        <Text style={styles.logoEmoji}>🍝</Text>
+                        <Text style={styles.appName}>SplitBuddy</Text>
+                        <Text style={styles.tagline}>
+                            Italian chaos,{"\n"}perfectly split.
                         </Text>
                     </View>
 
-                    {/* Login Card */}
-                    <View style={[styles.loginCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-                        <Text style={[styles.welcomeText, { color: colors.text }]}>Welcome Back</Text>
-                        <Text style={[styles.subtitleText, { color: colors.textSecondary }]}>
-                            Sign in to sync your trips across devices
-                        </Text>
-
-                        {/* Email Input */}
+                    <View style={styles.formContainer}>
                         <View style={styles.inputGroup}>
-                            <Text style={[styles.label, { color: colors.text }]}>Email</Text>
-                            <TextInput
-                                style={[styles.input, {
-                                    backgroundColor: colors.inputBackground,
-                                    borderColor: colors.inputBorder,
-                                    color: colors.inputText
-                                }]}
-                                placeholder="Enter your email"
-                                placeholderTextColor={colors.placeholder}
-                                value={email}
-                                onChangeText={setEmail}
-                                keyboardType="email-address"
-                                autoCapitalize="none"
-                                autoCorrect={false}
-                            />
-                        </View>
-
-                        {/* Password Input */}
-                        <View style={styles.inputGroup}>
-                            <Text style={[styles.label, { color: colors.text }]}>Password</Text>
-                            <View style={[styles.passwordContainer, {
-                                backgroundColor: colors.inputBackground,
-                                borderColor: colors.inputBorder
-                            }]}>
+                            <Text style={styles.label}>Email</Text>
+                            <CrumpledCard style={styles.inputCard}>
                                 <TextInput
-                                    style={[styles.passwordInput, { color: colors.inputText }]}
-                                    placeholder="Enter your password"
-                                    placeholderTextColor={colors.placeholder}
-                                    value={password}
-                                    onChangeText={setPassword}
-                                    secureTextEntry={!showPassword}
+                                    style={styles.input}
+                                    placeholder="mario@example.com"
+                                    placeholderTextColor={theme.colors.warmAsh}
+                                    value={email}
+                                    onChangeText={setEmail}
+                                    keyboardType="email-address"
                                     autoCapitalize="none"
                                     autoCorrect={false}
                                 />
-                                <TouchableOpacity
-                                    style={styles.eyeButton}
-                                    onPress={() => setShowPassword(!showPassword)}
-                                >
-                                    <Text style={styles.eyeIcon}>{showPassword ? "👁️" : "👁️‍🗨️"}</Text>
-                                </TouchableOpacity>
-                            </View>
+                            </CrumpledCard>
                         </View>
 
-                        {/* Forgot Password */}
-                        <TouchableOpacity style={styles.forgotPassword}>
-                            <Text style={[styles.forgotPasswordText, { color: colors.primary }]}>
-                                Forgot password?
-                            </Text>
-                        </TouchableOpacity>
-
-                        {/* Login Button */}
-                        <TouchableOpacity
-                            style={[
-                                styles.loginButton,
-                                { backgroundColor: colors.buttonPrimary },
-                                isLoading && styles.loginButtonDisabled
-                            ]}
-                            onPress={handleLogin}
-                            disabled={isLoading}
-                        >
-                            <Text style={[styles.loginButtonText, { color: colors.buttonText }]}>
-                                {isLoading ? "Signing in..." : "Login"}
-                            </Text>
-                        </TouchableOpacity>
-
-                        {/* Divider */}
-                        <View style={styles.divider}>
-                            <View style={[styles.dividerLine, { backgroundColor: colors.divider }]} />
-                            <Text style={[styles.dividerText, { color: colors.textTertiary }]}>OR</Text>
-                            <View style={[styles.dividerLine, { backgroundColor: colors.divider }]} />
+                        <View style={styles.inputGroup}>
+                            <Text style={styles.label}>Password</Text>
+                            <CrumpledCard style={styles.inputCard}>
+                                <View style={styles.passwordContainer}>
+                                    <TextInput
+                                        style={styles.passwordInput}
+                                        placeholder="••••••••"
+                                        placeholderTextColor={theme.colors.warmAsh}
+                                        value={password}
+                                        onChangeText={setPassword}
+                                        secureTextEntry={!showPassword}
+                                        autoCapitalize="none"
+                                        autoCorrect={false}
+                                    />
+                                    <Pressable
+                                        style={styles.eyeButton}
+                                        onPress={() => setShowPassword(!showPassword)}
+                                    >
+                                        {showPassword ? (
+                                            <EyeSlash size={20} color={theme.colors.warmAsh} />
+                                        ) : (
+                                            <Eye size={20} color={theme.colors.warmAsh} />
+                                        )}
+                                    </Pressable>
+                                </View>
+                            </CrumpledCard>
                         </View>
 
-                        {/* Continue Without Login */}
-                        <TouchableOpacity
-                            style={[styles.guestButton, {
-                                backgroundColor: colors.buttonSecondary,
-                                borderColor: colors.border
-                            }]}
-                            onPress={handleContinueWithoutLogin}
-                        >
-                            <Text style={[styles.guestButtonText, { color: colors.buttonTextSecondary }]}>
-                                Continue without login
-                            </Text>
-                        </TouchableOpacity>
+                        <Pressable style={styles.forgotPassword}>
+                            <Text style={styles.forgotPasswordText}>Lost your key?</Text>
+                        </Pressable>
+
+                        <View style={styles.actions}>
+                            <LucaButton
+                                title={isLoading ? "Entering..." : "Enter the Chaos"}
+                                onPress={handleLogin}
+                                disabled={isLoading}
+                                style={styles.loginButton}
+                            />
+                            <LucaButton
+                                title="Just Looking"
+                                variant="secondary"
+                                onPress={handleContinueWithoutLogin}
+                                disabled={isLoading}
+                            />
+                        </View>
                     </View>
 
-                    {/* Bottom Links */}
                     <View style={styles.bottomLinks}>
-                        <Text style={[styles.bottomText, { color: colors.textSecondary }]}>New here? </Text>
-                        <TouchableOpacity>
-                            <Text style={[styles.linkText, { color: colors.primary }]}>Create account</Text>
-                        </TouchableOpacity>
+                        <Text style={styles.bottomText}>New to the family? </Text>
+                        <Pressable>
+                            <Text style={styles.linkText}>Join us</Text>
+                        </Pressable>
                     </View>
-
-                    {/* Extra spacing for keyboard */}
-                    <View style={styles.spacer} />
                 </ScrollView>
             </KeyboardAvoidingView>
         </View>
@@ -179,185 +138,89 @@ export default function LoginScreen({ navigation }) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-    },
-    themeToggle: {
-        position: "absolute",
-        top: 50,
-        right: 24,
-        zIndex: 10,
+        backgroundColor: theme.colors.oldReceipt,
     },
     keyboardView: {
         flex: 1,
     },
     scrollContent: {
         flexGrow: 1,
-        paddingHorizontal: 24,
-        paddingTop: 60,
+        paddingHorizontal: theme.spacing.homePadding,
         paddingBottom: 40,
+        justifyContent: "center",
     },
     brandingContainer: {
         alignItems: "center",
         marginBottom: 48,
-    },
-    logoCircle: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
-        backgroundColor: "#4F46E5",
-        justifyContent: "center",
-        alignItems: "center",
-        marginBottom: 16,
-        shadowColor: "#4F46E5",
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.5,
-        shadowRadius: 16,
-        elevation: 8,
+        marginTop: 20,
     },
     logoEmoji: {
-        fontSize: 40,
+        fontSize: 64,
+        marginBottom: 16,
     },
     appName: {
-        fontSize: 36,
-        fontWeight: "900",
-        color: "#FFFFFF",
+        ...theme.typography.display,
+        fontSize: 42,
+        color: theme.colors.burntInk,
         marginBottom: 8,
-        letterSpacing: -1,
+        textAlign: "center",
     },
     tagline: {
-        fontSize: 16,
-        color: "#94A3B8",
-        fontWeight: "500",
-        letterSpacing: 0.5,
+        ...theme.typography.title2,
+        color: theme.colors.warmAsh,
+        textAlign: "center",
+        transform: [{ rotate: "-2deg" }],
     },
-    loginCard: {
-        backgroundColor: "#1E293B",
-        borderRadius: 24,
-        padding: 28,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 12 },
-        shadowOpacity: 0.3,
-        shadowRadius: 24,
-        elevation: 12,
-        borderWidth: 1,
-        borderColor: "#334155",
-    },
-    welcomeText: {
-        fontSize: 28,
-        fontWeight: "800",
-        color: "#FFFFFF",
-        marginBottom: 8,
-        letterSpacing: -0.5,
-    },
-    subtitleText: {
-        fontSize: 15,
-        color: "#94A3B8",
-        marginBottom: 28,
-        lineHeight: 22,
+    formContainer: {
+        marginBottom: 32,
     },
     inputGroup: {
         marginBottom: 20,
     },
     label: {
-        fontSize: 14,
-        fontWeight: "700",
-        color: "#E2E8F0",
-        marginBottom: 10,
-        letterSpacing: 0.3,
-        textTransform: "uppercase",
-        fontSize: 12,
+        ...theme.typography.title2,
+        fontSize: 18,
+        color: theme.colors.burntInk,
+        marginBottom: 8,
+    },
+    inputCard: {
+        padding: 0,
+        backgroundColor: theme.colors.white,
     },
     input: {
-        backgroundColor: "#0F172A",
-        borderWidth: 2,
-        borderColor: "#334155",
-        borderRadius: 14,
+        ...theme.typography.body,
         padding: 16,
-        fontSize: 16,
-        color: "#FFFFFF",
-        fontWeight: "500",
+        color: theme.colors.burntInk,
+        minHeight: 56,
     },
     passwordContainer: {
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: "#0F172A",
-        borderWidth: 2,
-        borderColor: "#334155",
-        borderRadius: 14,
     },
     passwordInput: {
+        ...theme.typography.body,
         flex: 1,
         padding: 16,
-        fontSize: 16,
-        color: "#FFFFFF",
-        fontWeight: "500",
+        color: theme.colors.burntInk,
+        minHeight: 56,
     },
     eyeButton: {
         padding: 16,
-    },
-    eyeIcon: {
-        fontSize: 20,
     },
     forgotPassword: {
         alignSelf: "flex-end",
         marginBottom: 24,
     },
     forgotPasswordText: {
-        fontSize: 14,
-        color: "#818CF8",
-        fontWeight: "600",
+        ...theme.typography.caption,
+        color: theme.colors.aperitivoSpritz,
+        fontFamily: "Syne_700Bold",
+    },
+    actions: {
+        gap: 16,
     },
     loginButton: {
-        backgroundColor: "#4F46E5",
-        borderRadius: 14,
-        padding: 18,
-        alignItems: "center",
-        shadowColor: "#4F46E5",
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.5,
-        shadowRadius: 12,
-        elevation: 8,
-    },
-    loginButtonDisabled: {
-        backgroundColor: "#475569",
-        shadowOpacity: 0.2,
-    },
-    loginButtonText: {
-        fontSize: 17,
-        fontWeight: "800",
-        color: "#FFFFFF",
-        letterSpacing: 0.5,
-        textTransform: "uppercase",
-    },
-    divider: {
-        flexDirection: "row",
-        alignItems: "center",
-        marginVertical: 24,
-    },
-    dividerLine: {
-        flex: 1,
-        height: 1,
-        backgroundColor: "#334155",
-    },
-    dividerText: {
-        color: "#64748B",
-        fontSize: 13,
-        fontWeight: "700",
-        marginHorizontal: 16,
-        letterSpacing: 1,
-    },
-    guestButton: {
-        backgroundColor: "#334155",
-        borderRadius: 14,
-        padding: 18,
-        alignItems: "center",
-        borderWidth: 2,
-        borderColor: "#475569",
-    },
-    guestButtonText: {
-        fontSize: 16,
-        fontWeight: "700",
-        color: "#E2E8F0",
-        letterSpacing: 0.3,
+        marginBottom: 8,
     },
     bottomLinks: {
         flexDirection: "row",
@@ -366,15 +229,12 @@ const styles = StyleSheet.create({
         marginTop: 32,
     },
     bottomText: {
-        fontSize: 15,
-        color: "#94A3B8",
+        ...theme.typography.body,
+        color: theme.colors.warmAsh,
     },
     linkText: {
-        fontSize: 15,
-        color: "#818CF8",
-        fontWeight: "700",
-    },
-    spacer: {
-        height: 40,
+        ...theme.typography.body,
+        color: theme.colors.aperitivoSpritz,
+        fontFamily: "Syne_700Bold",
     },
 });

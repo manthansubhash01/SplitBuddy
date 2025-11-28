@@ -3,73 +3,105 @@ import {
   Text,
   StyleSheet,
   FlatList,
-  TouchableOpacity,
   Pressable,
 } from "react-native";
 import { useGroups } from "../context/GroupContext";
+import { theme } from "../styles/theme";
+import { CrumpledCard } from "../components/ui/CrumpledCard";
+import { PulseIcon } from "../components/ui/PulseIcon";
+import { Plus, Users, ArrowRight } from "phosphor-react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function GroupsScreen({ navigation }) {
   const { groups } = useGroups();
+  const insets = useSafeAreaInsets();
+
+  const activeGroups = groups.filter((g) => !g.isSettled);
+  const totalDebt = activeGroups.reduce((sum, g) => sum + g.totalExpenses, 0);
 
   const renderTripCard = ({ item }) => (
-    <TouchableOpacity
-      style={styles.tripCard}
+    <Pressable
       onPress={() => navigation.navigate("GroupDetails", { groupId: item.id })}
     >
-      <View style={styles.tripHeader}>
-        <Text style={styles.tripName}>{item.name}</Text>
-        <Text style={styles.tripAmount}>${item.totalExpenses.toFixed(2)}</Text>
+      <CrumpledCard style={styles.tripCard}>
+        <View style={styles.tripHeader}>
+          <Text style={styles.tripName}>{item.name}</Text>
+          <Text style={styles.tripAmount}>
+            ${item.totalExpenses.toFixed(0)}
+          </Text>
+        </View>
+        <View style={styles.tripDetails}>
+          <View style={styles.memberCount}>
+            <Users size={16} color={theme.colors.warmAsh} weight="fill" />
+            <Text style={styles.tripMembers}>
+              {item.members?.length || 0}
+            </Text>
+          </View>
+          {item.description && (
+            <Text style={styles.tripDescription} numberOfLines={1}>
+              {item.description}
+            </Text>
+          )}
+        </View>
+        <View style={styles.cardFooter}>
+          <Text style={styles.viewDetailsText}>View Details</Text>
+          <ArrowRight size={16} color={theme.colors.aperitivoSpritz} weight="bold" />
+        </View>
+      </CrumpledCard>
+    </Pressable>
+  );
+
+  const renderHeader = () => (
+    <View>
+      <View style={styles.header}>
+        <Text style={styles.title}>All Trips</Text>
+        <Text style={styles.subtitle}>Manage your chaos</Text>
       </View>
-      <Text style={styles.tripMembers}>
-        {item.members?.length || 0} members
-      </Text>
-      {item.description && (
-        <Text style={styles.tripDescription} numberOfLines={1}>
-          {item.description}
-        </Text>
-      )}
-    </TouchableOpacity>
+
+      <View style={styles.statsContainer}>
+        <CrumpledCard style={styles.statCard}>
+          <Text style={styles.statValue}>{activeGroups.length}</Text>
+          <Text style={styles.statLabel}>Active</Text>
+        </CrumpledCard>
+        <CrumpledCard style={styles.statCard}>
+          <Text style={[styles.statValue, { color: theme.colors.aperitivoSpritz }]}>
+            ${totalDebt.toFixed(0)}
+          </Text>
+          <Text style={styles.statLabel}>Total Debt</Text>
+        </CrumpledCard>
+      </View>
+    </View>
   );
 
   const renderEmptyState = () => (
-    <View style={styles.emptyContainer}>
+    <CrumpledCard style={styles.emptyContainer}>
       <Text style={styles.emptyIcon}>🏖️</Text>
       <Text style={styles.emptyTitle}>No Trips Yet</Text>
       <Text style={styles.emptySubtitle}>
         Create your first trip to start splitting expenses with friends
       </Text>
-      <Pressable
-        style={styles.createButton}
-        onPress={() => navigation.navigate("CreateGroup")}
-      >
-        <Text style={styles.createButtonText}>Create Your First Trip</Text>
-      </Pressable>
-    </View>
+    </CrumpledCard>
   );
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>All Groups</Text>
-        {groups.length > 0 && (
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={() => navigation.navigate("CreateGroup")}
-          >
-            <Text style={styles.addButtonText}>+ New Trip</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <FlatList
-        data={groups}
+        data={activeGroups}
         renderItem={renderTripCard}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={
-          groups.length === 0 ? styles.emptyListContainer : styles.listContainer
-        }
+        contentContainerStyle={styles.listContainer}
+        ListHeaderComponent={renderHeader}
         ListEmptyComponent={renderEmptyState}
+        showsVerticalScrollIndicator={false}
       />
+
+      <View style={styles.fabContainer}>
+        <Pressable onPress={() => navigation.navigate("CreateGroup")}>
+          <PulseIcon style={styles.fab}>
+            <Plus size={32} color={theme.colors.burntInk} weight="bold" />
+          </PulseIcon>
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -77,115 +109,141 @@ export default function GroupsScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 15,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e0e0e0",
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#333",
-  },
-  addButton: {
-    backgroundColor: "#007AFF",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  addButtonText: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "600",
+    backgroundColor: theme.colors.oldReceipt,
   },
   listContainer: {
-    padding: 16,
+    padding: theme.spacing.homePadding,
+    paddingBottom: 100, // Space for FAB
   },
-  emptyListContainer: {
+  header: {
+    marginBottom: 24,
+    marginTop: 12,
+  },
+  title: {
+    ...theme.typography.display,
+    color: theme.colors.burntInk,
+  },
+  subtitle: {
+    ...theme.typography.body,
+    color: theme.colors.warmAsh,
+    marginTop: 4,
+  },
+  statsContainer: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 24,
+  },
+  statCard: {
     flex: 1,
-    justifyContent: "center",
     alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 20,
+    backgroundColor: theme.colors.white,
+  },
+  statValue: {
+    ...theme.typography.title1,
+    color: theme.colors.burntInk,
+  },
+  statLabel: {
+    ...theme.typography.caption,
+    color: theme.colors.warmAsh,
+    marginTop: 4,
+    textTransform: "uppercase",
+    letterSpacing: 1,
   },
   tripCard: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    marginBottom: 16,
+    backgroundColor: theme.colors.white,
   },
   tripHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
     marginBottom: 8,
   },
   tripName: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#333",
+    ...theme.typography.title2,
+    color: theme.colors.burntInk,
     flex: 1,
+    marginRight: 12,
   },
   tripAmount: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#007AFF",
+    ...theme.typography.title2,
+    color: theme.colors.aperitivoSpritz,
+    fontFamily: "Syne_700Bold",
+  },
+  tripDetails: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+    gap: 12,
+  },
+  memberCount: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: theme.colors.oldReceipt,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
   },
   tripMembers: {
-    fontSize: 14,
-    color: "#666",
+    ...theme.typography.caption,
+    color: theme.colors.warmAsh,
   },
   tripDescription: {
-    fontSize: 13,
-    color: "#999",
-    marginTop: 4,
+    ...theme.typography.caption,
+    color: theme.colors.warmAsh,
+    flex: 1,
+  },
+  cardFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    gap: 4,
+  },
+  viewDetailsText: {
+    ...theme.typography.micro,
+    color: theme.colors.aperitivoSpritz,
+    textTransform: "uppercase",
   },
   emptyContainer: {
     alignItems: "center",
-    paddingHorizontal: 40,
+    padding: 32,
+    backgroundColor: theme.colors.white,
   },
   emptyIcon: {
     fontSize: 64,
     marginBottom: 20,
   },
   emptyTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#333",
+    ...theme.typography.title1,
+    color: theme.colors.burntInk,
     marginBottom: 12,
   },
   emptySubtitle: {
-    fontSize: 16,
-    color: "#666",
+    ...theme.typography.body,
+    color: theme.colors.warmAsh,
     textAlign: "center",
-    marginBottom: 32,
-    lineHeight: 22,
   },
-  createButton: {
-    backgroundColor: "#007AFF",
-    paddingHorizontal: 32,
-    paddingVertical: 16,
-    borderRadius: 12,
-    shadowColor: "#007AFF",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
+  fabContainer: {
+    position: "absolute",
+    bottom: 32,
+    right: 24,
   },
-  createButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
+  fab: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: theme.colors.aperitivoSpritz,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: theme.colors.aperitivoSpritz,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 8,
+    borderWidth: 2,
+    borderColor: theme.colors.burntInk,
   },
 });

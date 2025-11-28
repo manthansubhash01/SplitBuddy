@@ -105,6 +105,6 @@ const styles = StyleSheet.create({
         color: theme.colors.burntInk,
     },
     secondaryText: {
-        color: theme.colors.electricAmaro,
+        color: theme.colors.burntInk,
     },
 });
