@@ -1,12 +1,12 @@
 import { NavigationContainer } from "@react-navigation/native";
-import AppNavigator from "./src/navigation/AppNavigator";
+import RootNavigator from "./src/navigation/RootNavigator";
 import { GroupProvider } from "./src/context/GroupContext";
 
 export default function App() {
   return (
     <GroupProvider>
       <NavigationContainer>
-        <AppNavigator />
+        <RootNavigator />
       </NavigationContainer>
     </GroupProvider>
   );
