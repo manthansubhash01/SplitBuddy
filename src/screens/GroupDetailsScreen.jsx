@@ -2,10 +2,12 @@ import {
   View,
   Text,
   ScrollView,
-  TouchableOpacity,
   Modal,
   TextInput,
   Alert,
+  StyleSheet,
+  Pressable,
+  StatusBar,
 } from "react-native";
 import { useState, useEffect, useMemo } from "react";
 import { useGroups } from "../context/GroupContext";
@@ -13,12 +15,26 @@ import {
   calculateBalances,
   formatCurrency,
 } from "../services/balanceCalculator";
-import { groupDetailsStyles as styles } from "../styles/groupDetailsStyles";
+import { theme } from "../styles/theme";
+import { CrumpledCard } from "../components/ui/CrumpledCard";
+import { LucaButton } from "../components/ui/LucaButton";
+import { PulseIcon } from "../components/ui/PulseIcon";
+import {
+  User,
+  Receipt,
+  Pencil,
+  Trash,
+  Plus,
+  ChartBar,
+  Money,
+} from "phosphor-react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function GroupDetailsScreen({ navigation, route }) {
   const { groupId } = route.params || {};
   const { getGroup, addMember, updateMember, deleteMember } = useGroups();
   const [group, setGroup] = useState(null);
+  const insets = useSafeAreaInsets();
 
   const [addModalVisible, setAddModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
@@ -58,7 +74,6 @@ export default function GroupDetailsScreen({ navigation, route }) {
       setNewMemberName("");
       setAddModalVisible(false);
       refreshGroup();
-      Alert.alert("Success!", `${member.name} has been added to the trip`);
     }
   };
 
@@ -74,14 +89,13 @@ export default function GroupDetailsScreen({ navigation, route }) {
       setEditingMember(null);
       setEditMemberName("");
       refreshGroup();
-      Alert.alert("Updated!", "Member name has been updated");
     }
   };
 
   const handleDeleteMember = (member) => {
     Alert.alert(
       "Remove Member",
-      `Are you sure you want to remove ${member.name} from this trip?`,
+      `Are you sure you want to remove ${member.name} from this trip ? `,
       [
         { text: "Cancel", style: "cancel" },
         {
@@ -90,7 +104,6 @@ export default function GroupDetailsScreen({ navigation, route }) {
           onPress: () => {
             deleteMember(groupId, member.id);
             refreshGroup();
-            Alert.alert("Removed", `${member.name} has been removed`);
           },
         },
       ]
@@ -105,127 +118,110 @@ export default function GroupDetailsScreen({ navigation, route }) {
 
   if (!group) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: theme.colors.oldReceipt }]}>
         <Text style={styles.errorText}>Trip not found</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.tripName}>{group.name}</Text>
-        {group.description && (
-          <Text style={styles.tripDescription}>{group.description}</Text>
-        )}
-        <Text style={styles.tripTotal}>
-          Total: ${group.totalExpenses.toFixed(2)}
-        </Text>
-      </View>
-
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Members</Text>
-          <TouchableOpacity
-            style={styles.addMemberButton}
-            onPress={() => setAddModalVisible(true)}
-          >
-            <Text style={styles.addMemberButtonText}>+ Add Member</Text>
-          </TouchableOpacity>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+      <StatusBar style="dark" />
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.header}>
+          <Text style={styles.tripName}>{group.name}</Text>
+          {group.description ? (
+            <Text style={styles.tripDescription}>{group.description}</Text>
+          ) : null}
+          <Text style={styles.tripTotal}>
+            Total Chaos: ${group.totalExpenses.toFixed(0)}
+          </Text>
         </View>
 
-        <View style={styles.membersList}>
-          {group.members && group.members.length > 0 ? (
-            group.members.map((member) => {
-              const balance = balances[member.id];
-              const balanceAmount = balance ? balance.balance : 0;
-              const isPositive = balanceAmount > 0.01;
-              const isNegative = balanceAmount < -0.01;
+        {/* Members Section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>The Squad</Text>
+            <Pressable onPress={() => setAddModalVisible(true)}>
+              <Text style={styles.addButtonText}>+ Add</Text>
+            </Pressable>
+          </View>
 
-              return (
-                <View key={member.id} style={styles.memberCard}>
-                  <View style={styles.memberInfo}>
-                    <View style={styles.memberAvatar}>
-                      <Text style={styles.memberInitial}>
-                        {member.name.charAt(0).toUpperCase()}
-                      </Text>
+          <View style={styles.grid}>
+            {group.members && group.members.length > 0 ? (
+              group.members.map((member) => {
+                const balance = balances[member.id];
+                const balanceAmount = balance ? balance.balance : 0;
+                const isPositive = balanceAmount > 0.01;
+                const isNegative = balanceAmount < -0.01;
+
+                return (
+                  <CrumpledCard key={member.id} style={styles.memberCard}>
+                    <View style={styles.memberHeader}>
+                      <View style={styles.avatar}>
+                        <Text style={styles.avatarText}>
+                          {member.name.charAt(0).toUpperCase()}
+                        </Text>
+                      </View>
+                      <View style={styles.memberActions}>
+                        <Pressable onPress={() => openEditModal(member)}>
+                          <Pencil size={16} color={theme.colors.warmAsh} />
+                        </Pressable>
+                        <Pressable onPress={() => handleDeleteMember(member)}>
+                          <Trash size={16} color={theme.colors.aperitivoSpritz} />
+                        </Pressable>
+                      </View>
                     </View>
-                    <View style={styles.memberDetails}>
-                      <Text style={styles.memberName}>{member.name}</Text>
-                      {balance && (
-                        <View style={styles.balanceInfo}>
-                          <Text style={styles.balanceLabel}>
-                            Paid:{" "}
-                            <Text style={styles.balanceValue}>
-                              {formatCurrency(balance.paid)}
-                            </Text>
-                            {" • "}
-                            Share:{" "}
-                            <Text style={styles.balanceValue}>
-                              {formatCurrency(balance.share)}
-                            </Text>
-                          </Text>
-                          {isPositive && (
-                            <Text style={styles.balancePositive}>
-                              Gets back {formatCurrency(balanceAmount)}
-                            </Text>
-                          )}
-                          {isNegative && (
-                            <Text style={styles.balanceNegative}>
-                              Owes {formatCurrency(balanceAmount)}
-                            </Text>
-                          )}
-                          {!isPositive && !isNegative && (
-                            <Text style={styles.balanceSettled}>Settled ✓</Text>
-                          )}
-                        </View>
-                      )}
-                    </View>
-                  </View>
-                  <View style={styles.memberActions}>
-                    <TouchableOpacity
-                      style={styles.editButton}
-                      onPress={() => openEditModal(member)}
+                    <Text style={styles.memberName}>{member.name}</Text>
+                    <Text
+                      style={[
+                        styles.memberBalance,
+                        {
+                          color: isPositive
+                            ? theme.colors.electricAmaro
+                            : isNegative
+                              ? theme.colors.aperitivoSpritz
+                              : theme.colors.warmAsh,
+                        },
+                      ]}
                     >
-                      <Text style={styles.editButtonText}>Edit</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.deleteButton}
-                      onPress={() => handleDeleteMember(member)}
-                    >
-                      <Text style={styles.deleteButtonText}>✕</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              );
-            })
-          ) : (
-            <Text style={styles.emptyText}>No members yet</Text>
-          )}
-        </View>
-      </View>
-
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Expenses</Text>
-          <TouchableOpacity
-            style={styles.addMemberButton}
-            onPress={() => navigation.navigate("AddExpense", { groupId })}
-          >
-            <Text style={styles.addMemberButtonText}>+ Add Expense</Text>
-          </TouchableOpacity>
+                      {isPositive
+                        ? `+ ${formatCurrency(balanceAmount)} `
+                        : isNegative
+                          ? `- ${formatCurrency(Math.abs(balanceAmount))} `
+                          : "Even"}
+                    </Text>
+                  </CrumpledCard>
+                );
+              })
+            ) : (
+              <Text style={styles.emptyText}>No friends yet? Sad.</Text>
+            )}
+          </View>
         </View>
 
-        <View style={styles.expensesList}>
+        {/* Expenses Section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Damage Report</Text>
+            <Pressable
+              onPress={() => navigation.navigate("AddExpense", { groupId })}
+            >
+              <Text style={styles.addButtonText}>+ Add</Text>
+            </Pressable>
+          </View>
+
           {group.expenses && group.expenses.length > 0 ? (
             group.expenses.map((expense) => {
               const payerName =
                 group.members.find((m) => m.id === expense.payer)?.name ||
                 "Unknown";
               return (
-                <TouchableOpacity
+                <Pressable
                   key={expense.id}
-                  style={styles.expenseCard}
                   onPress={() =>
                     navigation.navigate("EditExpense", {
                       groupId,
@@ -233,115 +229,275 @@ export default function GroupDetailsScreen({ navigation, route }) {
                     })
                   }
                 >
-                  <View style={styles.expenseHeader}>
-                    <Text style={styles.expenseTitle}>{expense.title}</Text>
-                    <Text style={styles.expenseAmount}>
-                      ${parseFloat(expense.amount).toFixed(2)}
-                    </Text>
-                  </View>
-                  <Text style={styles.expensePayer}>Paid by {payerName}</Text>
-                  <Text style={styles.expenseShared}>
-                    Split between {expense.sharedMembers?.length || 0} member(s)
-                  </Text>
-                </TouchableOpacity>
+                  <CrumpledCard style={styles.expenseCard}>
+                    <View style={styles.expenseRow}>
+                      <View style={styles.expenseInfo}>
+                        <Text style={styles.expenseTitle}>{expense.title}</Text>
+                        <Text style={styles.expensePayer}>
+                          Paid by {payerName}
+                        </Text>
+                      </View>
+                      <Text style={styles.expenseAmount}>
+                        ${parseFloat(expense.amount).toFixed(0)}
+                      </Text>
+                    </View>
+                  </CrumpledCard>
+                </Pressable>
               );
             })
           ) : (
-            <Text style={styles.emptyText}>No expenses yet</Text>
+            <CrumpledCard style={styles.emptyState}>
+              <Text style={styles.emptyText}>No expenses yet.</Text>
+            </CrumpledCard>
           )}
         </View>
-      </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Actions</Text>
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => navigation.navigate("Settlement", { groupId })}
-        >
-          <Text style={styles.actionButtonText}>Settlement Summary</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => navigation.navigate("ActivityLog", { groupId })}
-        >
-          <Text style={styles.actionButtonText}>Activity Log</Text>
-        </TouchableOpacity>
-      </View>
+        {/* Actions Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Next Steps</Text>
+          <View style={styles.actionButtons}>
+            <LucaButton
+              title="Settlements"
+              onPress={() => navigation.navigate("Settlement", { groupId })}
+              style={{ marginBottom: 12 }}
+            />
+            <LucaButton
+              title="Activity Log"
+              variant="secondary"
+              onPress={() => navigation.navigate("ActivityLog", { groupId })}
+            />
+          </View>
+        </View>
+      </ScrollView>
 
+      {/* Add Member Modal */}
       <Modal
-        animationType="slide"
+        animationType="fade"
         transparent={true}
         visible={addModalVisible}
         onRequestClose={() => setAddModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Add New Member</Text>
+          <CrumpledCard style={styles.modalContent}>
+            <Text style={styles.modalTitle}>New Victim</Text>
             <TextInput
-              style={styles.modalInput}
-              placeholder="Enter member name"
+              style={styles.input}
+              placeholder="Name (e.g. Luca)"
+              placeholderTextColor={theme.colors.warmAsh}
               value={newMemberName}
               onChangeText={setNewMemberName}
               autoFocus
             />
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.cancelButton]}
-                onPress={() => {
-                  setAddModalVisible(false);
-                  setNewMemberName("");
-                }}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.confirmButton]}
+            <View style={styles.modalActions}>
+              <LucaButton
+                title="Cancel"
+                variant="secondary"
+                onPress={() => setAddModalVisible(false)}
+                style={{ flex: 1, marginRight: 8 }}
+              />
+              <LucaButton
+                title="Add"
                 onPress={handleAddMember}
-              >
-                <Text style={styles.confirmButtonText}>Add</Text>
-              </TouchableOpacity>
+                style={{ flex: 1, marginLeft: 8 }}
+              />
             </View>
-          </View>
+          </CrumpledCard>
         </View>
       </Modal>
 
+      {/* Edit Member Modal */}
       <Modal
-        animationType="slide"
+        animationType="fade"
         transparent={true}
         visible={editModalVisible}
         onRequestClose={() => setEditModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Edit Member</Text>
+          <CrumpledCard style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Rename</Text>
             <TextInput
-              style={styles.modalInput}
-              placeholder="Enter member name"
+              style={styles.input}
               value={editMemberName}
               onChangeText={setEditMemberName}
               autoFocus
             />
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.cancelButton]}
-                onPress={() => {
-                  setEditModalVisible(false);
-                  setEditingMember(null);
-                  setEditMemberName("");
-                }}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.confirmButton]}
+            <View style={styles.modalActions}>
+              <LucaButton
+                title="Cancel"
+                variant="secondary"
+                onPress={() => setEditModalVisible(false)}
+                style={{ flex: 1, marginRight: 8 }}
+              />
+              <LucaButton
+                title="Update"
                 onPress={handleEditMember}
-              >
-                <Text style={styles.confirmButtonText}>Update</Text>
-              </TouchableOpacity>
+                style={{ flex: 1, marginLeft: 8 }}
+              />
             </View>
-          </View>
+          </CrumpledCard>
         </View>
       </Modal>
-    </ScrollView>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.oldReceipt,
+  },
+  scrollContent: {
+    padding: theme.spacing.homePadding,
+    paddingBottom: 40,
+  },
+  header: {
+    marginBottom: 32,
+    marginTop: 12,
+  },
+  tripName: {
+    ...theme.typography.display,
+    color: theme.colors.burntInk,
+    marginBottom: 4,
+  },
+  tripDescription: {
+    ...theme.typography.body,
+    color: theme.colors.warmAsh,
+    marginBottom: 8,
+  },
+  tripTotal: {
+    ...theme.typography.title2,
+    color: theme.colors.aperitivoSpritz,
+  },
+  section: {
+    marginBottom: 32,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    ...theme.typography.title2,
+    color: theme.colors.burntInk,
+  },
+  addButtonText: {
+    ...theme.typography.body,
+    color: theme.colors.aperitivoSpritz,
+    fontFamily: "Syne_700Bold",
+  },
+  grid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+  },
+  memberCard: {
+    width: "48%", // Roughly 2 columns
+    backgroundColor: theme.colors.white,
+    padding: 16,
+  },
+  memberHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 12,
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: theme.colors.electricAmaro,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: theme.colors.burntInk,
+  },
+  avatarText: {
+    ...theme.typography.title2,
+    color: theme.colors.burntInk,
+  },
+  memberActions: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  memberName: {
+    ...theme.typography.body,
+    fontFamily: "Syne_700Bold",
+    color: theme.colors.burntInk,
+    marginBottom: 4,
+  },
+  memberBalance: {
+    ...theme.typography.caption,
+  },
+  expenseCard: {
+    marginBottom: 12,
+    backgroundColor: theme.colors.white,
+  },
+  expenseRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  expenseInfo: {
+    flex: 1,
+  },
+  expenseTitle: {
+    ...theme.typography.title2,
+    fontSize: 18,
+    color: theme.colors.burntInk,
+  },
+  expensePayer: {
+    ...theme.typography.caption,
+    color: theme.colors.warmAsh,
+  },
+  expenseAmount: {
+    ...theme.typography.title2,
+    color: theme.colors.aperitivoSpritz,
+  },
+  emptyState: {
+    padding: 24,
+    alignItems: "center",
+    backgroundColor: theme.colors.white,
+  },
+  emptyText: {
+    ...theme.typography.body,
+    color: theme.colors.warmAsh,
+    textAlign: "center",
+  },
+  actionButtons: {
+    gap: 12,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    padding: 24,
+  },
+  modalContent: {
+    backgroundColor: theme.colors.oldReceipt,
+  },
+  modalTitle: {
+    ...theme.typography.title1,
+    color: theme.colors.burntInk,
+    marginBottom: 24,
+    textAlign: "center",
+  },
+  input: {
+    ...theme.typography.body,
+    borderBottomWidth: 2,
+    borderBottomColor: theme.colors.burntInk,
+    paddingVertical: 12,
+    marginBottom: 32,
+    color: theme.colors.burntInk,
+  },
+  modalActions: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  errorText: {
+    ...theme.typography.title2,
+    textAlign: "center",
+    marginTop: 40,
+  },
+});
+

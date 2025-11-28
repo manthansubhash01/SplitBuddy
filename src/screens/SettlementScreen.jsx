@@ -3,27 +3,32 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
   Alert,
+  StatusBar,
 } from "react-native";
 import { useGroups } from "../context/GroupContext";
-import { useTheme } from "../context/ThemeContext";
+import { theme } from "../styles/theme";
 import {
   calculateBalances,
   calculateSettlements,
   getMemberSummary,
 } from "../utils/settlementCalculations";
+import { CrumpledCard } from "../components/ui/CrumpledCard";
+import { LucaButton } from "../components/ui/LucaButton";
+import { PulseIcon } from "../components/ui/PulseIcon";
+import { ArrowRight, CheckCircle, Sparkle } from "phosphor-react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function SettlementScreen({ navigation, route }) {
-  const { colors } = useTheme();
   const { getGroup, settleGroup } = useGroups();
   const { groupId } = route.params || {};
   const group = getGroup(groupId);
+  const insets = useSafeAreaInsets();
 
   if (!group) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <Text style={[styles.errorText, { color: colors.error }]}>
+      <View style={[styles.container, { backgroundColor: theme.colors.oldReceipt }]}>
+        <Text style={[styles.errorText, { color: theme.colors.aperitivoSpritz }]}>
           Group not found
         </Text>
       </View>
@@ -44,381 +49,290 @@ export default function SettlementScreen({ navigation, route }) {
 
   const handleSettleTrip = () => {
     Alert.alert(
-      "Settle Trip",
-      "Are you sure you want to settle this trip? This will mark it as complete and move it to archives.",
+      "Close the Circle?",
+      "This will archive the trip. No turning back!",
       [
-        { text: "Cancel", style: "cancel" },
+        { text: "Wait", style: "cancel" },
         {
-          text: "Settle",
+          text: "Settle It",
           style: "destructive",
           onPress: () => {
             settleGroup(groupId);
-            Alert.alert("Success", "Trip settled successfully!", [
-              {
-                text: "OK",
-                onPress: () => navigation.goBack(),
-              },
-            ]);
+            navigation.goBack();
           },
         },
       ]
     );
   };
 
+  const allSettled = settlements.length === 0 && expenses.length > 0;
+
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: colors.background }]}
-      contentContainerStyle={styles.scrollContent}
-    >
-      <Text style={[styles.title, { color: colors.text }]}>
-        Settlement Summary
-      </Text>
-      <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-        for {group.name}
-      </Text>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+      <StatusBar style="dark" />
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={styles.title}>Settlements</Text>
+        <Text style={styles.subtitle}>for {group.name}</Text>
 
-      {isSettled && (
-        <View style={[styles.settledBadge, { backgroundColor: colors.success }]}>
-          <Text style={styles.settledText}>✓ Trip Settled</Text>
-        </View>
-      )}
+        {isSettled && (
+          <CrumpledCard style={styles.settledBadge}>
+            <CheckCircle size={24} color={theme.colors.white} weight="fill" />
+            <Text style={styles.settledText}>Trip Archived</Text>
+          </CrumpledCard>
+        )}
 
-      {/* Member Balances */}
-      <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>
-          Member Balances
-        </Text>
-
-        {members.map((member) => {
-          const summary = getMemberSummary(expenses, member.id);
-          const balance = balances[member.id] || 0;
-
-          return (
-            <View
-              key={member.id}
-              style={[
-                styles.memberCard,
-                { backgroundColor: colors.card, borderColor: colors.border },
-              ]}
-            >
-              <View style={styles.memberHeader}>
-                <Text style={[styles.memberName, { color: colors.text }]}>
-                  {member.name}
-                </Text>
-                <Text
-                  style={[
-                    styles.netBalance,
-                    {
-                      color:
-                        balance > 0.01
-                          ? colors.success
-                          : balance < -0.01
-                            ? colors.error
-                            : colors.textSecondary,
-                    },
-                  ]}
-                >
-                  {balance > 0.01
-                    ? `+₹${balance.toFixed(2)}`
-                    : balance < -0.01
-                      ? `-₹${Math.abs(balance).toFixed(2)}`
-                      : "₹0.00"}
-                </Text>
-              </View>
-
-              <View style={styles.memberDetails}>
-                <View style={styles.detailRow}>
-                  <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>
-                    Total Paid:
-                  </Text>
-                  <Text style={[styles.detailValue, { color: colors.text }]}>
-                    ₹{summary.totalPaid.toFixed(2)}
-                  </Text>
-                </View>
-                <View style={styles.detailRow}>
-                  <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>
-                    Total Owed:
-                  </Text>
-                  <Text style={[styles.detailValue, { color: colors.text }]}>
-                    ₹{summary.totalOwed.toFixed(2)}
-                  </Text>
-                </View>
-              </View>
-
-              {balance > 0.01 && (
-                <View style={[styles.statusBadge, { backgroundColor: colors.success + "20" }]}>
-                  <Text style={[styles.statusText, { color: colors.success }]}>
-                    Should Receive ₹{balance.toFixed(2)}
-                  </Text>
-                </View>
-              )}
-              {balance < -0.01 && (
-                <View style={[styles.statusBadge, { backgroundColor: colors.error + "20" }]}>
-                  <Text style={[styles.statusText, { color: colors.error }]}>
-                    Owes ₹{Math.abs(balance).toFixed(2)}
-                  </Text>
-                </View>
-              )}
-              {Math.abs(balance) <= 0.01 && (
-                <View style={[styles.statusBadge, { backgroundColor: colors.borderLight }]}>
-                  <Text style={[styles.statusText, { color: colors.textSecondary }]}>
-                    All Settled
-                  </Text>
-                </View>
-              )}
-            </View>
-          );
-        })}
-      </View>
-
-      {/* Settlement Suggestions */}
-      {settlements.length > 0 && (
+        {/* Member Balances */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            Suggested Payments
-          </Text>
-          <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
-            Minimal transfers to settle all balances
-          </Text>
+          <Text style={styles.sectionTitle}>Member Balances</Text>
 
-          {settlements.map((settlement, index) => (
-            <View
-              key={index}
-              style={[
-                styles.settlementCard,
-                { backgroundColor: colors.card, borderColor: colors.border },
-              ]}
-            >
-              <View style={styles.settlementRow}>
-                <Text style={[styles.fromText, { color: colors.text }]}>
-                  {getMemberName(settlement.from)}
-                </Text>
-                <Text style={[styles.arrow, { color: colors.textTertiary }]}>→</Text>
-                <Text style={[styles.toText, { color: colors.text }]}>
-                  {getMemberName(settlement.to)}
-                </Text>
-              </View>
-              <Text style={[styles.amountText, { color: colors.primary }]}>
-                ₹{settlement.amount.toFixed(2)}
-              </Text>
-            </View>
-          ))}
+          {members.map((member) => {
+            const summary = getMemberSummary(expenses, member.id);
+            const balance = balances[member.id] || 0;
+            const isPositive = balance > 0.01;
+            const isNegative = balance < -0.01;
 
-          <View style={[styles.infoBox, { backgroundColor: colors.info + "20", borderColor: colors.info }]}>
-            <Text style={[styles.infoText, { color: colors.info }]}>
-              💡 Only {settlements.length} payment{settlements.length > 1 ? "s" : ""} needed to settle everything!
+            return (
+              <CrumpledCard key={member.id} style={styles.memberCard}>
+                <View style={styles.memberHeader}>
+                  <Text style={styles.memberName}>{member.name}</Text>
+                  <Text
+                    style={[
+                      styles.netBalance,
+                      {
+                        color: isPositive
+                          ? theme.colors.electricAmaro
+                          : isNegative
+                            ? theme.colors.aperitivoSpritz
+                            : theme.colors.warmAsh,
+                      },
+                    ]}
+                  >
+                    {isPositive
+                      ? `+₹${balance.toFixed(0)}`
+                      : isNegative
+                        ? `-₹${Math.abs(balance).toFixed(0)}`
+                        : "Even"}
+                  </Text>
+                </View>
+
+                <View style={styles.memberDetails}>
+                  <Text style={styles.detailText}>
+                    Paid: ₹{summary.totalPaid.toFixed(0)}
+                  </Text>
+                  <Text style={styles.detailText}>
+                    Share: ₹{summary.totalOwed.toFixed(0)}
+                  </Text>
+                </View>
+              </CrumpledCard>
+            );
+          })}
+        </View>
+
+        {/* Settlement Suggestions */}
+        {settlements.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Suggested Payments</Text>
+            <Text style={styles.sectionSubtitle}>
+              Minimal transfers to close the loop
+            </Text>
+
+            {settlements.map((settlement, index) => (
+              <CrumpledCard key={index} style={styles.settlementCard}>
+                <View style={styles.settlementRow}>
+                  <Text style={styles.fromText}>
+                    {getMemberName(settlement.from)}
+                  </Text>
+                  <ArrowRight size={20} color={theme.colors.warmAsh} />
+                  <Text style={styles.toText}>
+                    {getMemberName(settlement.to)}
+                  </Text>
+                </View>
+                <Text style={styles.amountText}>
+                  ₹{settlement.amount.toFixed(0)}
+                </Text>
+              </CrumpledCard>
+            ))}
+          </View>
+        )}
+
+        {allSettled && (
+          <View style={styles.celebrationContainer}>
+            <PulseIcon>
+              <Sparkle size={48} color={theme.colors.electricAmaro} weight="fill" />
+            </PulseIcon>
+            <Text style={styles.celebrationText}>
+              All even, you lucky bastards!
             </Text>
           </View>
-        </View>
-      )}
+        )}
 
-      {settlements.length === 0 && expenses.length > 0 && (
-        <View style={[styles.infoBox, { backgroundColor: colors.success + "20", borderColor: colors.success }]}>
-          <Text style={[styles.infoText, { color: colors.success }]}>
-            ✓ All balances are settled!
-          </Text>
-        </View>
-      )}
-
-      {expenses.length === 0 && (
-        <View style={[styles.emptyState, { backgroundColor: colors.card }]}>
-          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-            No expenses added yet
-          </Text>
-        </View>
-      )}
+        {expenses.length === 0 && (
+          <CrumpledCard style={styles.emptyState}>
+            <Text style={styles.emptyText}>No expenses yet.</Text>
+            <Text style={styles.emptySubtext}>
+              Did you guys just stare at each other?
+            </Text>
+          </CrumpledCard>
+        )}
+      </ScrollView>
 
       {/* Settle Trip Button */}
       {!isSettled && expenses.length > 0 && (
-        <TouchableOpacity
-          style={[styles.settleButton, { backgroundColor: colors.primary }]}
-          onPress={handleSettleTrip}
-        >
-          <Text style={[styles.settleButtonText, { color: colors.buttonText }]}>
-            Settle Trip & Archive
-          </Text>
-        </TouchableOpacity>
-      )}
-
-      {isSettled && (
-        <View style={[styles.settledInfo, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <Text style={[styles.settledInfoText, { color: colors.textSecondary }]}>
-            This trip has been settled and archived.
-          </Text>
-          <Text style={[styles.settledInfoText, { color: colors.textSecondary }]}>
-            Settled on: {new Date(group.settledAt).toLocaleDateString()}
-          </Text>
+        <View style={styles.footer}>
+          <LucaButton
+            title="Settle Trip & Archive"
+            onPress={handleSettleTrip}
+            variant="primary"
+          />
         </View>
       )}
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: theme.colors.oldReceipt,
   },
   scrollContent: {
-    padding: 20,
-    paddingBottom: 40,
+    padding: theme.spacing.settlementPadding,
+    paddingBottom: 100,
   },
   title: {
-    fontSize: 28,
-    fontWeight: "800",
+    ...theme.typography.display,
+    color: theme.colors.burntInk,
     marginBottom: 4,
   },
   subtitle: {
-    fontSize: 16,
+    ...theme.typography.title2,
+    color: theme.colors.warmAsh,
     marginBottom: 24,
   },
   settledBadge: {
-    padding: 12,
-    borderRadius: 12,
+    backgroundColor: theme.colors.electricAmaro,
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
     marginBottom: 24,
+    borderWidth: 0,
   },
   settledText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "700",
+    ...theme.typography.title2,
+    color: theme.colors.burntInk,
   },
   section: {
     marginBottom: 32,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    marginBottom: 4,
+    ...theme.typography.title2,
+    color: theme.colors.burntInk,
+    marginBottom: 12,
   },
   sectionSubtitle: {
-    fontSize: 14,
+    ...theme.typography.body,
+    color: theme.colors.warmAsh,
     marginBottom: 16,
   },
   memberCard: {
-    padding: 16,
-    borderRadius: 14,
     marginBottom: 12,
-    borderWidth: 2,
+    backgroundColor: theme.colors.white,
   },
   memberHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 8,
   },
   memberName: {
+    ...theme.typography.title2,
     fontSize: 18,
-    fontWeight: "700",
+    color: theme.colors.burntInk,
   },
   netBalance: {
+    ...theme.typography.title1,
     fontSize: 20,
-    fontWeight: "800",
   },
   memberDetails: {
-    marginBottom: 12,
-  },
-  detailRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 6,
+    gap: 16,
   },
-  detailLabel: {
-    fontSize: 14,
-  },
-  detailValue: {
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  statusBadge: {
-    padding: 10,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  statusText: {
-    fontSize: 14,
-    fontWeight: "700",
+  detailText: {
+    ...theme.typography.caption,
+    color: theme.colors.warmAsh,
   },
   settlementCard: {
-    padding: 16,
-    borderRadius: 14,
     marginBottom: 12,
-    borderWidth: 2,
+    backgroundColor: theme.colors.white,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   settlementRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 8,
+    gap: 8,
+    flex: 1,
   },
   fromText: {
-    fontSize: 16,
-    fontWeight: "600",
-    flex: 1,
-  },
-  arrow: {
-    fontSize: 20,
-    marginHorizontal: 12,
+    ...theme.typography.body,
+    color: theme.colors.burntInk,
+    fontFamily: "Syne_700Bold",
   },
   toText: {
-    fontSize: 16,
-    fontWeight: "600",
-    flex: 1,
-    textAlign: "right",
+    ...theme.typography.body,
+    color: theme.colors.burntInk,
+    fontFamily: "Syne_700Bold",
   },
   amountText: {
+    ...theme.typography.title1,
+    color: theme.colors.aperitivoSpritz,
+  },
+  celebrationContainer: {
+    alignItems: "center",
+    padding: 32,
+    gap: 16,
+  },
+  celebrationText: {
+    ...theme.typography.display,
     fontSize: 24,
-    fontWeight: "800",
+    color: theme.colors.electricAmaro,
     textAlign: "center",
-  },
-  infoBox: {
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 2,
-    marginTop: 12,
-  },
-  infoText: {
-    fontSize: 14,
-    fontWeight: "600",
-    textAlign: "center",
+    textShadowColor: theme.colors.burntInk,
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 0,
   },
   emptyState: {
-    padding: 40,
-    borderRadius: 14,
     alignItems: "center",
+    padding: 32,
+    backgroundColor: theme.colors.white,
   },
   emptyText: {
-    fontSize: 16,
+    ...theme.typography.title2,
+    color: theme.colors.burntInk,
+    marginBottom: 8,
   },
-  settleButton: {
-    padding: 18,
-    borderRadius: 14,
-    alignItems: "center",
-    marginTop: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
+  emptySubtext: {
+    ...theme.typography.body,
+    color: theme.colors.warmAsh,
+    textAlign: "center",
   },
-  settleButtonText: {
-    fontSize: 18,
-    fontWeight: "800",
-    letterSpacing: 0.5,
-    textTransform: "uppercase",
-  },
-  settledInfo: {
-    padding: 20,
-    borderRadius: 14,
-    borderWidth: 2,
-    marginTop: 16,
-    alignItems: "center",
-  },
-  settledInfoText: {
-    fontSize: 14,
-    marginBottom: 4,
+  footer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 24,
+    backgroundColor: theme.colors.oldReceipt,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(0,0,0,0.05)",
   },
   errorText: {
-    fontSize: 16,
+    ...theme.typography.title2,
     textAlign: "center",
     marginTop: 40,
   },
