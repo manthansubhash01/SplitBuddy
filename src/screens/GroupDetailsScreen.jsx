@@ -227,6 +227,62 @@ export default function GroupDetailsScreen({ navigation, route }) {
       </View>
 
       <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Expenses</Text>
+          <TouchableOpacity
+            style={styles.addMemberButton}
+            onPress={() => navigation.navigate("AddExpense", { groupId })}
+          >
+            <Text style={styles.addMemberButtonText}>+ Add Expense</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.expensesList}>
+          {group.expenses && group.expenses.length > 0 ? (
+            group.expenses.map((expense) => {
+              const payerName =
+                group.members.find((m) => m.id === expense.payer)?.name ||
+                "Unknown";
+              return (
+                <View key={expense.id} style={styles.expenseCard}>
+                  <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    <TouchableOpacity
+                      style={{ flex: 1 }}
+                      onPress={() =>
+                        navigation.navigate("EditExpense", {
+                          groupId,
+                          expenseId: expense.id,
+                        })
+                      }
+                    >
+                      <View style={styles.expenseHeader}>
+                        <Text style={styles.expenseTitle}>{expense.title}</Text>
+                        <Text style={styles.expenseAmount}>
+                          ₹{parseFloat(expense.amount).toFixed(2)}
+                        </Text>
+                      </View>
+                      <Text style={styles.expensePayer}>Paid by {payerName}</Text>
+                      <Text style={styles.expenseShared}>
+                        Split between {expense.sharedMembers?.length || 0} member(s)
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={{ padding: 8, marginLeft: 8 }}
+                      onPress={() => handleDeleteExpense(expense)}
+                    >
+                      <Text style={{ fontSize: 20 }}>🗑️</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              );
+            })
+          ) : (
+            <Text style={styles.emptyText}>No expenses yet</Text>
+          )}
+        </View>
+      </View>
+
+      <View style={styles.section}>
         <Text style={styles.sectionTitle}>Actions</Text>
         <TouchableOpacity
           style={styles.actionButton}
