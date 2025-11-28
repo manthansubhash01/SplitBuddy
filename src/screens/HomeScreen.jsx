@@ -8,10 +8,12 @@ import {
 } from "react-native";
 import { useGroups } from "../context/GroupContext";
 import { useTheme } from "../context/ThemeContext";
+import { useLanguage } from "../context/LanguageContext";
 
 export default function HomeScreen({ navigation }) {
   const { groups } = useGroups();
   const { colors } = useTheme();
+  const { t } = useLanguage();
 
   const activeGroups = groups.filter((g) => g.totalExpenses > 0).slice(0, 3);
   const totalBalance = groups.reduce((sum, g) => sum + g.totalExpenses, 0);
@@ -26,8 +28,8 @@ export default function HomeScreen({ navigation }) {
           { backgroundColor: colors.surface, borderBottomColor: colors.border },
         ]}
       >
-        <Text style={styles.title}>Dashboard</Text>
-        <Text style={styles.subtitle}>Welcome back!</Text>
+        <Text style={styles.title}>{t("home.dashboard")}</Text>
+        <Text style={styles.subtitle}>{t("home.welcomeBack")}</Text>
       </View>
 
       <View style={styles.statsContainer}>
@@ -36,15 +38,15 @@ export default function HomeScreen({ navigation }) {
             {groups.length}
           </Text>
           <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-            Total Groups
+            {t("home.totalGroups")}
           </Text>
         </View>
         <View style={[styles.statCard, { backgroundColor: colors.card }]}>
           <Text style={[styles.statValue, { color: colors.primary }]}>
-            ${totalBalance.toFixed(2)}
+            ₹{totalBalance.toFixed(2)}
           </Text>
           <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-            Total Expenses
+            {t("home.totalExpenses")}
           </Text>
         </View>
       </View>
@@ -52,12 +54,12 @@ export default function HomeScreen({ navigation }) {
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            Recent Activity
+            {t("home.recentActivity")}
           </Text>
           {groups.length > 0 && (
             <TouchableOpacity onPress={() => navigation.navigate("GroupsTab")}>
               <Text style={[styles.seeAllText, { color: colors.primary }]}>
-                See All
+                {t("home.seeAll")}
               </Text>
             </TouchableOpacity>
           )}
@@ -85,11 +87,11 @@ export default function HomeScreen({ navigation }) {
                     { color: colors.textSecondary },
                   ]}
                 >
-                  {group.members?.length || 0} members
+                  {group.members?.length || 0} {t("common.members").toLowerCase()}
                 </Text>
               </View>
               <Text style={[styles.activityAmount, { color: colors.primary }]}>
-                ${group.totalExpenses.toFixed(2)}
+                ₹{group.totalExpenses.toFixed(2)}
               </Text>
             </TouchableOpacity>
           ))
@@ -99,10 +101,10 @@ export default function HomeScreen({ navigation }) {
           >
             <Text style={styles.emptyIcon}>📊</Text>
             <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-              No activity yet
+              {t("home.noActivity")}
             </Text>
             <Text style={[styles.emptySubtext, { color: colors.textTertiary }]}>
-              Create a group and add expenses to see activity
+              {t("home.noActivitySubtext")}
             </Text>
           </View>
         )}
@@ -110,7 +112,7 @@ export default function HomeScreen({ navigation }) {
 
       <View style={styles.quickActions}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>
-          Quick Actions
+          {t("home.quickActions")}
         </Text>
         <TouchableOpacity
           style={[styles.actionButton, { backgroundColor: colors.card }]}
@@ -122,7 +124,7 @@ export default function HomeScreen({ navigation }) {
         >
           <Text style={styles.actionIcon}>➕</Text>
           <Text style={[styles.actionText, { color: colors.text }]}>
-            Create New Group
+            {t("home.createNewGroup")}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -131,19 +133,19 @@ export default function HomeScreen({ navigation }) {
         >
           <Text style={styles.actionIcon}>👥</Text>
           <Text style={[styles.actionText, { color: colors.text }]}>
-            View All Groups
+            {t("home.viewAllGroups")}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.actionButton, { marginTop: 10 }]}
           onPress={() => {
             Alert.alert(
-              "Log Out",
-              "Are you sure you want to log out?",
+              t("home.logOut"),
+              t("home.logOut") + "?",
               [
-                { text: "Cancel", style: "cancel" },
+                { text: t("common.cancel"), style: "cancel" },
                 {
-                  text: "Log Out",
+                  text: t("home.logOut"),
                   style: "destructive",
                   onPress: () => {
                     // Reset the root navigator state to show Login screen
@@ -159,7 +161,9 @@ export default function HomeScreen({ navigation }) {
           }}
         >
           <Text style={styles.actionIcon}>🚪</Text>
-          <Text style={[styles.actionText, { color: "#EF4444" }]}>Log Out</Text>
+          <Text style={[styles.actionText, { color: "#EF4444" }]}>
+            {t("home.logOut")}
+          </Text>
         </TouchableOpacity>
       </View>
     </ScrollView>

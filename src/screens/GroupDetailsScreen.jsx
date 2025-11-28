@@ -13,12 +13,14 @@ import {
   calculateBalances,
   formatCurrency,
 } from "../services/balanceCalculator";
+import { useLanguage } from "../context/LanguageContext";
 import { groupDetailsStyles as styles } from "../styles/groupDetailsStyles";
 
 export default function GroupDetailsScreen({ navigation, route }) {
   const { groupId } = route.params || {};
   const { getGroup, addMember, updateMember, deleteMember, deleteExpense } =
     useGroups();
+  const { t } = useLanguage();
   const [group, setGroup] = useState(null);
 
   const [addModalVisible, setAddModalVisible] = useState(false);

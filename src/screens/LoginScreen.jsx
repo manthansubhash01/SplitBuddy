@@ -11,10 +11,13 @@ import {
 } from "react-native";
 import { useState } from "react";
 import { useTheme } from "../context/ThemeContext";
+import { useLanguage } from "../context/LanguageContext";
 import ThemeToggleButton from "../components/ThemeToggleButton";
+import LanguageToggleButton from "../components/LanguageToggleButton";
 
 export default function LoginScreen({ navigation }) {
     const { colors, isDark } = useTheme();
+    const { t } = useLanguage();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
@@ -42,8 +45,11 @@ export default function LoginScreen({ navigation }) {
                 backgroundColor={colors.background}
             />
 
-            {/* Theme Toggle Button */}
-            <ThemeToggleButton style={styles.themeToggle} />
+            {/* Toggle Buttons */}
+            <View style={styles.toggleContainer}>
+                <LanguageToggleButton style={styles.toggle} />
+                <ThemeToggleButton style={styles.toggle} />
+            </View>
 
             <KeyboardAvoidingView
                 style={styles.keyboardView}
@@ -59,29 +65,29 @@ export default function LoginScreen({ navigation }) {
                         <View style={[styles.logoCircle, { backgroundColor: colors.primary }]}>
                             <Text style={styles.logoEmoji}>💰</Text>
                         </View>
-                        <Text style={[styles.appName, { color: colors.text }]}>SplitBuddy</Text>
+                        <Text style={[styles.appName, { color: colors.text }]}>{t("login.appName")}</Text>
                         <Text style={[styles.tagline, { color: colors.textSecondary }]}>
-                            Fair splits. Zero drama.
+                            {t("login.tagline")}
                         </Text>
                     </View>
 
                     {/* Login Card */}
                     <View style={[styles.loginCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-                        <Text style={[styles.welcomeText, { color: colors.text }]}>Welcome Back</Text>
+                        <Text style={[styles.welcomeText, { color: colors.text }]}>{t("login.welcomeBack")}</Text>
                         <Text style={[styles.subtitleText, { color: colors.textSecondary }]}>
-                            Sign in to sync your trips across devices
+                            {t("login.subtitle")}
                         </Text>
 
                         {/* Email Input */}
                         <View style={styles.inputGroup}>
-                            <Text style={[styles.label, { color: colors.text }]}>Email</Text>
+                            <Text style={[styles.label, { color: colors.text }]}>{t("login.email")}</Text>
                             <TextInput
                                 style={[styles.input, {
                                     backgroundColor: colors.inputBackground,
                                     borderColor: colors.inputBorder,
                                     color: colors.inputText
                                 }]}
-                                placeholder="Enter your email"
+                                placeholder={t("login.emailPlaceholder")}
                                 placeholderTextColor={colors.placeholder}
                                 value={email}
                                 onChangeText={setEmail}
@@ -93,14 +99,14 @@ export default function LoginScreen({ navigation }) {
 
                         {/* Password Input */}
                         <View style={styles.inputGroup}>
-                            <Text style={[styles.label, { color: colors.text }]}>Password</Text>
+                            <Text style={[styles.label, { color: colors.text }]}>{t("login.password")}</Text>
                             <View style={[styles.passwordContainer, {
                                 backgroundColor: colors.inputBackground,
                                 borderColor: colors.inputBorder
                             }]}>
                                 <TextInput
                                     style={[styles.passwordInput, { color: colors.inputText }]}
-                                    placeholder="Enter your password"
+                                    placeholder={t("login.passwordPlaceholder")}
                                     placeholderTextColor={colors.placeholder}
                                     value={password}
                                     onChangeText={setPassword}
@@ -120,7 +126,7 @@ export default function LoginScreen({ navigation }) {
                         {/* Forgot Password */}
                         <TouchableOpacity style={styles.forgotPassword}>
                             <Text style={[styles.forgotPasswordText, { color: colors.primary }]}>
-                                Forgot password?
+                                {t("login.forgotPassword")}
                             </Text>
                         </TouchableOpacity>
 
@@ -135,14 +141,14 @@ export default function LoginScreen({ navigation }) {
                             disabled={isLoading}
                         >
                             <Text style={[styles.loginButtonText, { color: colors.buttonText }]}>
-                                {isLoading ? "Signing in..." : "Login"}
+                                {isLoading ? t("login.signingIn") : t("login.loginButton")}
                             </Text>
                         </TouchableOpacity>
 
                         {/* Divider */}
                         <View style={styles.divider}>
                             <View style={[styles.dividerLine, { backgroundColor: colors.divider }]} />
-                            <Text style={[styles.dividerText, { color: colors.textTertiary }]}>OR</Text>
+                            <Text style={[styles.dividerText, { color: colors.textTertiary }]}>{t("login.or")}</Text>
                             <View style={[styles.dividerLine, { backgroundColor: colors.divider }]} />
                         </View>
 
@@ -155,16 +161,16 @@ export default function LoginScreen({ navigation }) {
                             onPress={handleContinueWithoutLogin}
                         >
                             <Text style={[styles.guestButtonText, { color: colors.buttonTextSecondary }]}>
-                                Continue without login
+                                {t("login.continueWithoutLogin")}
                             </Text>
                         </TouchableOpacity>
                     </View>
 
                     {/* Bottom Links */}
                     <View style={styles.bottomLinks}>
-                        <Text style={[styles.bottomText, { color: colors.textSecondary }]}>New here? </Text>
+                        <Text style={[styles.bottomText, { color: colors.textSecondary }]}>{t("login.newHere")} </Text>
                         <TouchableOpacity>
-                            <Text style={[styles.linkText, { color: colors.primary }]}>Create account</Text>
+                            <Text style={[styles.linkText, { color: colors.primary }]}>{t("login.createAccount")}</Text>
                         </TouchableOpacity>
                     </View>
 
@@ -180,11 +186,16 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
     },
-    themeToggle: {
+    toggleContainer: {
         position: "absolute",
         top: 50,
         right: 24,
         zIndex: 10,
+        flexDirection: "row",
+        gap: 8,
+    },
+    toggle: {
+        // Individual toggle button styles handled by components
     },
     keyboardView: {
         flex: 1,
