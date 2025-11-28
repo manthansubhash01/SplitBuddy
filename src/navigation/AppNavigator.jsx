@@ -2,6 +2,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import GroupsNavigator from "./GroupsNavigator";
 import HomeScreen from "../screens/HomeScreen";
 import ArchiveScreen from "../screens/ArchiveScreen";
+import { useTheme } from "../context/ThemeContext";
 
 import {
   HomeLineIcon,
@@ -15,19 +16,20 @@ import {
 const Tab = createBottomTabNavigator();
 
 export default function AppNavigator() {
+  const { colors, isDark } = useTheme();
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarActiveTintColor: "#007AFF",
-        tabBarInactiveTintColor: "#8E8E93",
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textTertiary,
         tabBarStyle: {
           height: 65,
           paddingBottom: 8,
           paddingTop: 8,
-          backgroundColor: "#FFFFFF",
+          backgroundColor: colors.surface,
           borderTopWidth: 1,
-          borderTopColor: "#E5E5EA",
+          borderTopColor: colors.border,
         },
         tabBarLabelStyle: {
           fontSize: 12,

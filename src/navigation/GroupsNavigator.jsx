@@ -1,4 +1,6 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { useTheme } from "../context/ThemeContext";
+import ThemeToggleButton from "../components/ThemeToggleButton";
 
 import GroupsScreen from "../screens/GroupsScreen";
 import CreateGroupScreen from "../screens/CreateGroupScreen";
@@ -11,8 +13,21 @@ import ActivityLogScreen from "../screens/ActivityLogScreen";
 const Stack = createNativeStackNavigator();
 
 export default function GroupsNavigator() {
+  const { colors } = useTheme();
+
+  const screenOptions = {
+    headerStyle: {
+      backgroundColor: colors.surface,
+    },
+    headerTintColor: colors.text,
+    headerTitleStyle: {
+      fontWeight: "600",
+    },
+    headerRight: () => <ThemeToggleButton style={{ marginRight: 8 }} />,
+  };
+
   return (
-    <Stack.Navigator>
+    <Stack.Navigator screenOptions={screenOptions}>
       <Stack.Screen
         name="Groups"
         component={GroupsScreen}

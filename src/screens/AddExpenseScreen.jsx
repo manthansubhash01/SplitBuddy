@@ -13,10 +13,12 @@ import {
 } from "react-native";
 import { useState } from "react";
 import { useGroups } from "../context/GroupContext";
+import { useTheme } from "../context/ThemeContext";
 import * as ImagePicker from "expo-image-picker";
 import { createExpense } from "../api/expenseService";
 
 export default function AddExpenseScreen({ navigation, route }) {
+  const { colors } = useTheme();
   const { addExpenseToGroup, getGroup } = useGroups();
   const { groupId } = route.params || {};
   const group = getGroup(groupId);
