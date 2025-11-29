@@ -42,15 +42,26 @@ export default function AddExpenseScreen({ navigation, route }) {
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
+  const [splitMode, setSplitMode] = useState("equal"); // "equal" | "unequal"
+  const [customSplits, setCustomSplits] = useState({});
+
   const members = group?.members || [];
 
   const toggleMemberSelection = (memberId) => {
     setSharedMembers((prev) => {
+      let newMembers;
       if (prev.includes(memberId)) {
-        return prev.filter((id) => id !== memberId);
+        newMembers = prev.filter((id) => id !== memberId);
+        // Remove from custom splits if deselected
+        if (customSplits[memberId]) {
+          const newSplits = { ...customSplits };
+          delete newSplits[memberId];
+          setCustomSplits(newSplits);
+        }
       } else {
-        return [...prev, memberId];
+        newMembers = [...prev, memberId];
       }
+      return newMembers;
     });
     if (errors.sharedMembers) {
       setErrors((prev) => ({ ...prev, sharedMembers: null }));
@@ -60,9 +71,32 @@ export default function AddExpenseScreen({ navigation, route }) {
   const selectAllMembers = () => {
     if (sharedMembers.length === members.length) {
       setSharedMembers([]);
+      setCustomSplits({});
     } else {
       setSharedMembers(members.map((m) => m.id));
     }
+  };
+
+  const handleAutoFill = () => {
+    if (!amount || isNaN(parseFloat(amount))) return;
+    const total = parseFloat(amount);
+    const count = sharedMembers.length;
+    if (count === 0) return;
+
+    const splitAmount = (total / count).toFixed(2);
+    const newSplits = {};
+    let currentSum = 0;
+
+    sharedMembers.forEach((id, index) => {
+      if (index === count - 1) {
+        // Last person gets the remainder to ensure exact total
+        newSplits[id] = (total - currentSum).toFixed(2);
+      } else {
+        newSplits[id] = splitAmount;
+        currentSum += parseFloat(splitAmount);
+      }
+    });
+    setCustomSplits(newSplits);
   };
 
   const pickImage = async () => {
@@ -117,6 +151,19 @@ export default function AddExpenseScreen({ navigation, route }) {
         "Please select at least one member to share the cost";
     }
 
+    if (!isPayment && splitMode === "unequal") {
+      const totalSplit = Object.values(customSplits).reduce(
+        (sum, val) => sum + (parseFloat(val) || 0),
+        0
+      );
+      const totalAmount = parseFloat(amount);
+      if (Math.abs(totalSplit - totalAmount) > 0.05) {
+        newErrors.customSplits = `Total split ($${totalSplit.toFixed(
+          2
+        )}) must match expense amount ($${totalAmount.toFixed(2)})`;
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -134,6 +181,7 @@ export default function AddExpenseScreen({ navigation, route }) {
         amount: parseFloat(amount),
         payer,
         sharedMembers,
+        splits: splitMode === "unequal" ? customSplits : null,
         receiptUri,
         groupId,
         isPayment,
@@ -300,15 +348,25 @@ export default function AddExpenseScreen({ navigation, route }) {
               {isPayment ? "To whom?" : "Split between"}
             </Text>
             {!isPayment && (
-              <Pressable onPress={selectAllMembers}>
-                <Text style={styles.actionLink}>
-                  {sharedMembers.length === members.length
-                    ? "Deselect All"
-                    : "Select All"}
-                </Text>
-              </Pressable>
+              <View style={{ flexDirection: "row", gap: 12 }}>
+                <Pressable
+                  onPress={() => setSplitMode(splitMode === "equal" ? "unequal" : "equal")}
+                >
+                  <Text style={styles.actionLink}>
+                    {splitMode === "equal" ? "Split Unequally" : "Split Equally"}
+                  </Text>
+                </Pressable>
+                <Pressable onPress={selectAllMembers}>
+                  <Text style={styles.actionLink}>
+                    {sharedMembers.length === members.length
+                      ? "Deselect All"
+                      : "Select All"}
+                  </Text>
+                </Pressable>
+              </View>
             )}
           </View>
+
           <View style={styles.grid}>
             {members.map((member) => {
               const isSelected = sharedMembers.includes(member.id);
@@ -318,6 +376,7 @@ export default function AddExpenseScreen({ navigation, route }) {
                   style={[
                     styles.optionCard,
                     isSelected && styles.optionCardSelected,
+                    splitMode === "unequal" && isSelected && { height: "auto", flexDirection: "column", alignItems: "flex-start" }
                   ]}
                   onPress={() => {
                     if (isPayment) {
@@ -330,27 +389,67 @@ export default function AddExpenseScreen({ navigation, route }) {
                     }
                   }}
                 >
-                  <Text
-                    style={[
-                      styles.optionText,
-                      isSelected && styles.optionTextSelected,
-                    ]}
-                  >
-                    {member.name}
-                  </Text>
-                  {isSelected ? (
-                    <CheckCircle
-                      size={20}
-                      color={theme.colors.white}
-                      weight="fill"
-                    />
-                  ) : (
-                    <Circle size={20} color={theme.colors.warmAsh} />
+                  <View style={{ flexDirection: "row", alignItems: "center", width: "100%", justifyContent: "space-between", marginBottom: splitMode === "unequal" && isSelected ? 8 : 0 }}>
+                    <Text
+                      style={[
+                        styles.optionText,
+                        isSelected && styles.optionTextSelected,
+                      ]}
+                    >
+                      {member.name}
+                    </Text>
+                    {isSelected ? (
+                      <CheckCircle
+                        size={20}
+                        color={theme.colors.white}
+                        weight="fill"
+                      />
+                    ) : (
+                      <Circle size={20} color={theme.colors.warmAsh} />
+                    )}
+                  </View>
+
+                  {!isPayment && splitMode === "unequal" && isSelected && (
+                    <View style={{ width: "100%", backgroundColor: "rgba(255,255,255,0.2)", borderRadius: 8, padding: 4 }}>
+                      <TextInput
+                        style={{
+                          color: theme.colors.white,
+                          fontFamily: "Syne_700Bold",
+                          fontSize: 16,
+                          padding: 4,
+                          textAlign: "right"
+                        }}
+                        placeholder="0.00"
+                        placeholderTextColor="rgba(255,255,255,0.5)"
+                        keyboardType="decimal-pad"
+                        value={customSplits[member.id] || ""}
+                        onChangeText={(text) => {
+                          setCustomSplits(prev => ({ ...prev, [member.id]: text }));
+                          if (errors.customSplits) setErrors(prev => ({ ...prev, customSplits: null }));
+                        }}
+                        onPressIn={(e) => e.stopPropagation()}
+                      />
+                    </View>
                   )}
                 </Pressable>
               );
             })}
           </View>
+
+          {!isPayment && splitMode === "unequal" && (
+            <View style={{ marginTop: 16 }}>
+              <LucaButton
+                title="✨ Auto Fill Evenly"
+                variant="secondary"
+                onPress={handleAutoFill}
+              />
+              {errors.customSplits && (
+                <Text style={[styles.errorText, { marginTop: 12 }]}>
+                  {errors.customSplits}
+                </Text>
+              )}
+            </View>
+          )}
           {errors.sharedMembers && (
             <Text style={styles.errorText}>{errors.sharedMembers}</Text>
           )}

@@ -19,16 +19,29 @@ export const calculateBalances = (expenses, members) => {
 
     // Calculate balances from expenses
     expenses.forEach(expense => {
-        const { amount, payer, sharedMembers } = expense;
-        const shareAmount = amount / sharedMembers.length;
+        const { amount, payer, sharedMembers, splits } = expense;
 
         // Payer paid the full amount
-        balances[payer] += amount;
+        if (balances[payer] !== undefined) {
+            balances[payer] += parseFloat(amount);
+        }
 
-        // Each shared member owes their share
-        sharedMembers.forEach(memberId => {
-            balances[memberId] -= shareAmount;
-        });
+        if (splits && Object.keys(splits).length > 0) {
+            // Custom split
+            Object.entries(splits).forEach(([memberId, splitAmount]) => {
+                if (balances[memberId] !== undefined) {
+                    balances[memberId] -= parseFloat(splitAmount);
+                }
+            });
+        } else {
+            // Equal split
+            const shareAmount = parseFloat(amount) / sharedMembers.length;
+            sharedMembers.forEach(memberId => {
+                if (balances[memberId] !== undefined) {
+                    balances[memberId] -= shareAmount;
+                }
+            });
+        }
     });
 
     return balances;
@@ -97,16 +110,20 @@ export const getMemberSummary = (expenses, memberId) => {
     let totalOwed = 0;
 
     expenses.forEach(expense => {
-        const { amount, payer, sharedMembers } = expense;
+        const { amount, payer, sharedMembers, splits } = expense;
 
         // If this member paid
         if (payer === memberId) {
-            totalPaid += amount;
+            totalPaid += parseFloat(amount);
         }
 
-        // If this member is in shared members
-        if (sharedMembers.includes(memberId)) {
-            totalOwed += amount / sharedMembers.length;
+        // If this member is involved in the expense
+        if (splits && splits[memberId]) {
+            // Custom split
+            totalOwed += parseFloat(splits[memberId]);
+        } else if (!splits && sharedMembers.includes(memberId)) {
+            // Equal split
+            totalOwed += parseFloat(amount) / sharedMembers.length;
         }
     });
 
