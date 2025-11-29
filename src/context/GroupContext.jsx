@@ -29,6 +29,8 @@ export const GroupProvider = ({ children }) => {
 
       newSocket.on("connect", () => {
         console.log("Socket connected:", newSocket.id);
+        // Join user-specific room for personal notifications (like being added to a group)
+        newSocket.emit("join_user_room", user.id);
       });
 
       // Listen for updates
