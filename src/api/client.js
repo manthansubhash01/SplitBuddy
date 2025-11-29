@@ -3,7 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Use localhost for iOS simulator, or 10.0.2.2 for Android emulator
 // For physical device, use your machine's IP address
-export const SOCKET_URL = "https://split-backend-86di.onrender.com";
+export const SOCKET_URL = "https://splitbuddy-3usk.onrender.com";
 const API_URL = `${SOCKET_URL}/api`;
 
 const client = axios.create({

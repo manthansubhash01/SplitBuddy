@@ -164,7 +164,7 @@ export default function CreateGroupScreen({ navigation }) {
               <ActivityIndicator size="small" color={theme.colors.tomatoRed} style={{ marginVertical: 8 }} />
             )}
 
-            {searchResults.length > 0 && (
+            {searchResults.length > 0 ? (
               <View style={styles.searchResultsList}>
                 {searchResults.map((user) => (
                   <Pressable
@@ -185,6 +185,10 @@ export default function CreateGroupScreen({ navigation }) {
                   </Pressable>
                 ))}
               </View>
+            ) : (
+              searchQuery.length > 1 && !isSearching && (
+                <Text style={styles.noResultsText}>No user found. Sad.</Text>
+              )
             )}
           </CrumpledCard>
 
@@ -311,6 +315,12 @@ const styles = StyleSheet.create({
   resultEmail: {
     ...theme.typography.caption,
     color: theme.colors.warmAsh,
+  },
+  noResultsText: {
+    ...theme.typography.body,
+    color: theme.colors.warmAsh,
+    textAlign: "center",
+    marginTop: 16,
   },
   membersList: {
     flexDirection: "row",
