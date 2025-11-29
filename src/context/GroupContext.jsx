@@ -21,7 +21,66 @@ export const GroupProvider = ({ children }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [socket, setSocket] = useState(null);
 
-  // ... (existing code)
+  // Initialize Socket
+  useEffect(() => {
+    if (user && user.id !== 'guest') {
+      const newSocket = io(SOCKET_URL);
+      setSocket(newSocket);
+
+      newSocket.on("connect", () => {
+        console.log("Socket connected:", newSocket.id);
+        // Join user-specific room for personal notifications (like being added to a group)
+        newSocket.emit("join_user_room", user.id);
+      });
+
+      // Listen for updates
+      newSocket.on("expense_added", (expense) => {
+        console.log("New expense received via socket:", expense);
+        loadGroups();
+      });
+
+      newSocket.on("group_settled", (group) => {
+        console.log("Group settled via socket:", group);
+        loadGroups();
+      });
+
+      newSocket.on("expense_updated", (expense) => {
+        console.log("Expense updated via socket:", expense);
+        loadGroups();
+      });
+
+      newSocket.on("expense_deleted", (expenseId) => {
+        console.log("Expense deleted via socket:", expenseId);
+        loadGroups();
+      });
+
+      newSocket.on("added_to_group", (group) => {
+        console.log("Added to group via socket:", group);
+        loadGroups();
+      });
+
+      return () => newSocket.disconnect();
+    }
+  }, [user]);
+
+  // Join group rooms when groups are loaded
+  useEffect(() => {
+    if (socket && groups.length > 0) {
+      groups.forEach(group => {
+        socket.emit("join_group", group.id);
+      });
+    }
+  }, [socket, groups]);
+
+  // Load groups when user changes
+  useEffect(() => {
+    if (user) {
+      loadGroups();
+    } else {
+      setGroups([]);
+      setIsLoaded(false);
+    }
+  }, [user]);
 
   const loadGroups = async () => {
     try {
