@@ -9,30 +9,45 @@ import { theme } from "../styles/theme";
 const Stack = createNativeStackNavigator();
 
 export default function RootNavigator() {
-    const { user, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
 
-    if (isLoading) {
-        return (
-            <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: theme.colors.oldReceipt }}>
-                <ActivityIndicator size="large" color={theme.colors.aperitivoSpritz} />
-            </View>
-        );
-    }
+  console.log("RootNavigator render - user:", user, "isLoading:", isLoading);
 
+  if (isLoading) {
+    console.log("Showing loading screen");
     return (
-        <Stack.Navigator
-            screenOptions={{
-                headerShown: false,
-            }}
-        >
-            {user ? (
-                <Stack.Screen name="Main" component={AppNavigator} />
-            ) : (
-                <>
-                    <Stack.Screen name="Login" component={LoginScreen} />
-                    <Stack.Screen name="Register" component={RegisterScreen} />
-                </>
-            )}
-        </Stack.Navigator>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: theme.colors.oldReceipt,
+        }}
+      >
+        <ActivityIndicator size="large" color={theme.colors.aperitivoSpritz} />
+      </View>
     );
+  }
+
+  console.log(
+    "Rendering navigator - user is",
+    user ? "logged in" : "not logged in"
+  );
+
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
+      {user ? (
+        <Stack.Screen name="Main" component={AppNavigator} />
+      ) : (
+        <>
+          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="Register" component={RegisterScreen} />
+        </>
+      )}
+    </Stack.Navigator>
+  );
 }

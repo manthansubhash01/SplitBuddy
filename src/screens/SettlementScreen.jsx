@@ -36,16 +36,39 @@ export default function SettlementScreen({ navigation, route }) {
     );
   }
 
-  const { members, expenses, isSettled } = group;
+  const { members, expenses, isSettled, payments = [] } = group;
 
-  // Calculate balances and settlements
-  const balances = calculateBalances(expenses, members);
+  const balances = calculateBalances(expenses, members, payments);
   const settlements = calculateSettlements(balances, members);
 
-  // Get member name by ID
   const getMemberName = (memberId) => {
     const member = members.find((m) => m.id === memberId);
     return member ? member.name : "Unknown";
+  };
+
+  const handleMarkPaid = (settlement) => {
+    Alert.alert(
+      "Mark as Paid",
+      `Confirm that ${getMemberName(
+        settlement.from
+      )} paid ₹${settlement.amount.toFixed(2)} to ${getMemberName(
+        settlement.to
+      )}?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Mark Paid",
+          onPress: () => {
+            addPayment(groupId, {
+              from: settlement.from,
+              to: settlement.to,
+              amount: settlement.amount,
+            });
+            Alert.alert("Success", "Payment marked as complete!");
+          },
+        },
+      ]
+    );
   };
 
   const handleSettleTrip = () => {
@@ -58,6 +81,14 @@ export default function SettlementScreen({ navigation, route }) {
           text: "Settle It",
           style: "destructive",
           onPress: () => {
+            settlements.forEach((settlement) => {
+              addPayment(groupId, {
+                from: settlement.from,
+                to: settlement.to,
+                amount: settlement.amount,
+              });
+            });
+
             settleGroup(groupId);
             navigation.goBack();
           },
@@ -248,7 +279,6 @@ export default function SettlementScreen({ navigation, route }) {
         )}
       </ScrollView>
 
-      {/* Settle Trip Button */}
       {!isSettled && expenses.length > 0 && (
         <View style={styles.footer}>
           <LucaButton

@@ -32,7 +32,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function GroupDetailsScreen({ navigation, route }) {
   const { groupId } = route.params || {};
-  const { getGroup, addMember, updateMember, deleteMember } = useGroups();
+  const { getGroup, addMember, updateMember, deleteMember, deleteExpense } =
+    useGroups();
+  const { t } = useLanguage();
   const [group, setGroup] = useState(null);
   const insets = useSafeAreaInsets();
 
@@ -75,6 +77,25 @@ export default function GroupDetailsScreen({ navigation, route }) {
       const updatedGroup = getGroup(groupId);
       setGroup(updatedGroup);
     }
+  };
+
+  const handleDeleteExpense = (expense) => {
+    Alert.alert(
+      "Delete Expense",
+      `Are you sure you want to delete "${expense.title}"?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            deleteExpense(groupId, expense.id);
+            refreshGroup();
+            Alert.alert("Deleted", "Expense has been removed");
+          },
+        },
+      ]
+    );
   };
 
   const handleAddMember = () => {

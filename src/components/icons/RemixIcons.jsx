@@ -8,9 +8,6 @@ export const HomeLineIcon = ({ size = 24, color = "#000" }) => (
       fill={color}
     />
   </Svg>
-
-
-  
 );
 
 export const HomeFilledIcon = ({ size = 24, color = "#000" }) => (

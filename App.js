@@ -1,3 +1,4 @@
+import React from "react";
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet, View, ActivityIndicator } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
@@ -15,14 +16,21 @@ import {
 import { theme } from "./src/styles/theme";
 
 export default function App() {
-  let [fontsLoaded] = useFonts({
+  let [fontsLoaded, fontError] = useFonts({
     Syne_400Regular,
     Syne_500Medium,
     Syne_700Bold,
     Syne_800ExtraBold,
   });
 
-  if (!fontsLoaded) {
+  // Add timeout fallback to prevent infinite loading
+  React.useEffect(() => {
+    if (fontError) {
+      console.error("Font loading error:", fontError);
+    }
+  }, [fontError]);
+
+  if (!fontsLoaded && !fontError) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={theme.colors.aperitivoSpritz} />

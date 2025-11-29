@@ -1,4 +1,5 @@
 export const lightTheme = {
+
     // Background colors
     background: "#F8F9FA",
     surface: "#FFFFFF",
@@ -82,25 +83,44 @@ export const lightTheme = {
             fontSize: 14,
             color: "#57534E",
         },
+
     },
-    spacing: {
-        xs: 4,
-        sm: 8,
-        md: 16,
-        lg: 24,
-        xl: 32,
-        homePadding: 20,
+    title2: {
+      fontFamily: "Syne_700Bold",
+      fontSize: 20,
     },
-    radii: {
-        sm: 8,
-        md: 12,
-        lg: 16,
-        card: 20,
-        button: 16,
+    body: {
+      fontFamily: "Syne_500Medium",
+      fontSize: 16,
     },
+    caption: {
+      fontFamily: "Syne_400Regular",
+      fontSize: 14,
+    },
+    micro: {
+      fontFamily: "Syne_500Medium",
+      fontSize: 11,
+    },
+  },
+  spacing: {
+    xs: 4,
+    sm: 8,
+    md: 16,
+    lg: 24,
+    xl: 32,
+    homePadding: 20,
+  },
+  radii: {
+    sm: 8,
+    md: 12,
+    lg: 16,
+    card: 20,
+    button: 16,
+  },
 };
 
 export const darkTheme = {
+
     // Background colors
     background: "#0F172A",
     surface: "#1E293B",
@@ -184,22 +204,32 @@ export const darkTheme = {
             fontSize: 14,
             color: "#94A3B8",
         },
+
     },
-    spacing: {
-        xs: 4,
-        sm: 8,
-        md: 16,
-        lg: 24,
-        xl: 32,
-        homePadding: 20,
+    caption: {
+      fontFamily: "Syne_400Regular",
+      fontSize: 14,
     },
-    radii: {
-        sm: 8,
-        md: 12,
-        lg: 16,
-        card: 20,
-        button: 16,
+    micro: {
+      fontFamily: "Syne_500Medium",
+      fontSize: 11,
     },
+  },
+  spacing: {
+    xs: 4,
+    sm: 8,
+    md: 16,
+    lg: 24,
+    xl: 32,
+    homePadding: 20,
+  },
+  radii: {
+    sm: 8,
+    md: 12,
+    lg: 16,
+    card: 20,
+    button: 16,
+  },
 };
 
 export const theme = lightTheme;
